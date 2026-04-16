@@ -42,3 +42,6 @@ out/
 # Test output files
 log.build.*
 log.run.*
+
+**/**/.clang-format
+.codex

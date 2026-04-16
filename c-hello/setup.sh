@@ -26,3 +26,9 @@ if ! test -d workdir; then
 fi
 
 check_exists_and_create_symlink "unikraft"
+
+if ! test -d workdir/libs; then
+    mkdir workdir/libs
+fi
+
+check_exists_and_create_symlink "libs/musl"
