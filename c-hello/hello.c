@@ -1,11 +1,8 @@
 #include <stdio.h>
-#include <unistd.h>
 
-int main(void) {
-    // With write directly
-    write(1, "Hello from write()!\n", 20);
+int main(void)
+{
+	puts("Hello from Unikraft!");
 
-    // With puts
-    puts("Hello from Unikraft!");
-    return 0;
+	return 0;
 }
