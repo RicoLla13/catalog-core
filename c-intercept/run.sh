@@ -24,4 +24,4 @@ sudo qemu-system-x86_64 \
     -netdev bridge,id=n0,br=virbr0 \
     -device virtio-net-pci,netdev=n0 \
     -append "netdev.ip=172.44.0.2/24:172.44.0.1::: --" \
-    -kernel workdir/build/c-hello_qemu-x86_64
+    -kernel workdir/build/c-intercept_qemu-x86_64
