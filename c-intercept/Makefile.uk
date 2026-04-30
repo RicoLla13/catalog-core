@@ -1,3 +1,3 @@
-$(eval $(call addlib,appchello))
+$(eval $(call addlib,appcintercept))
 
-APPCHELLO_SRCS-y += $(APPCHELLO_BASE)/hello.c
+APPCINTERCEPT_SRCS-y += $(APPCINTERCEPT_BASE)/intercept.c

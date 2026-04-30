@@ -214,24 +214,24 @@ If updating the Unikraft core code in the `./workdir/unikraft/` directory, you t
 
 ### Add Other Source Code Files
 
-The current configuration use a single source file: `hello.c`.
+The current configuration use a single source file: `intercept.c`.
 If looking to add another file to the build, update the [`Makefile.uk`](Makefile.uk) file.
 
 For example, to add a new file `support.c` to the build, update the [`Makefile.uk`](Makefile.uk) file to:
 
 ```make
-$(eval $(call addlib,appchello))
+$(eval $(call addlib,appcintercept))
 
-APPCHELLO_SRCS-y += $(APPCHELLO_BASE)/hello.c
+APPCINTERCEPT_SRCS-y += $(APPCINTERCEPT_BASE)/intercept.c
 APPCHELLO_SRCS-y += $(APPCHELLO_BASE)/support.c
 ```
 
 To add a new include directory, such as a local `include/` directory, update the [`Makefile.uk`](Makefile.uk) file to:
 
 ```make
-$(eval $(call addlib,appchello))
+$(eval $(call addlib,appcintercept))
 
-APPCHELLO_SRCS-y += $(APPCHELLO_BASE)/hello.c
+APPCINTERCEPT_SRCS-y += $(APPCINTERCEPT_BASE)/intercept.c
 CINCLUDES-y += -I$(APPCHELLO_BASE)/include
 ```
 
