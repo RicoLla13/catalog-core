@@ -1,5 +1,8 @@
 #!/bin/sh
 
+## TB SYSCALL REDIRECT
+test -d repos/syscall-server || git clone https://gitlab-etu.ing.he-arc.ch/isc/2025-26/niveau-3/3282-projet-p3-sa-il/253/syscall-redirection-server.git repos/syscall-server
+
 test -d repos/unikraft || git clone git@github.com:RicoLla13/unikraft.git repos/unikraft
 test -d repos/libs/musl || git clone https://github.com/unikraft/lib-musl repos/libs/musl
 test -d repos/libs/lwip || git clone https://github.com/unikraft/lib-lwip repos/libs/lwip
