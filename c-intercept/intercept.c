@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 int main(int argc, char* argv[]) {
@@ -11,6 +12,7 @@ int main(int argc, char* argv[]) {
     const char* message = "written from example";
     int fd;
     int rc;
+    struct stat st;
     ssize_t nread;
     ssize_t nwritten;
 
@@ -75,6 +77,35 @@ int main(int argc, char* argv[]) {
                 "openat(AT_FDCWD, \"%s\", O_RDONLY) "
                 "failed: fd=%d errno=%d (%s)\n",
                 file_path, fd, errno, strerror(errno));
+        return 1;
+    }
+
+    memset(&st, 0, sizeof(st));
+    errno = 0;
+    rc = fstatat(AT_FDCWD, file_path, &st, 0);
+    if (rc == 0) {
+        dprintf(1,
+                "fstatat(AT_FDCWD, \"%s\", 0) succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
+                file_path, rc, errno, st.st_mode, (long long)st.st_size,
+                (unsigned long)st.st_nlink);
+    } else {
+        dprintf(1,
+                "fstatat(AT_FDCWD, \"%s\", 0) failed: rc=%d errno=%d (%s)\n",
+                file_path, rc, errno, strerror(errno));
+        return 1;
+    }
+
+    memset(&st, 0, sizeof(st));
+    errno = 0;
+    rc = fstat(fd, &st);
+    if (rc == 0) {
+        dprintf(1,
+                "fstat(%d) succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
+                fd, rc, errno, st.st_mode, (long long)st.st_size,
+                (unsigned long)st.st_nlink);
+    } else {
+        dprintf(1, "fstat(%d) failed: rc=%d errno=%d (%s)\n", fd, rc, errno,
+                strerror(errno));
         return 1;
     }
 
