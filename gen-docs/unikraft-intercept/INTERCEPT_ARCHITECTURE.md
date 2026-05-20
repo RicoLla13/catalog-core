@@ -81,7 +81,7 @@ normal local implementation when intercept does not claim the syscall.
 
 Boot init:
 
-- zeroes the remote-fd bitmap
+- zeroes the remote-fd metadata table
 - initializes transport state
 - optionally runs a boot-time RPC probe, depending on menuconfig policy
 - sets `intercept_ready = 1`
@@ -111,12 +111,26 @@ The current remote fd design is intentionally narrow.
 Descriptors returned by intercepted `openat()` are:
 
 - treated as remote-only
-- tracked in a bitmap owned by the intercept layer
+- tracked in an intercept-owned metadata table keyed by guest-visible fd
 - not installed as rich objects in Unikraft's local file model
 
-That bitmap currently answers one question:
+Each table entry currently stores:
 
-- "is this fd remote?"
+- descriptor backend kind:
+  - remote file
+  - remote directory
+- remote server fd
+- open flags and mode
+- cached offset field reserved for follow-on work
+
+Current caveat:
+
+- the table does not yet carry authoritative file type metadata from the
+  server
+- backend kind is therefore not strong enough to reject all invalid dirfd uses
+  locally
+- the server remains the current source of truth for `ENOTDIR` on fd-based path
+  operations
 
 This is enough for the current staged subset:
 
@@ -139,7 +153,7 @@ normal local Unikraft path.
 
 - absolute paths force remote `dirfd = AT_FDCWD`
 - relative paths allow `AT_FDCWD` or a tracked remote directory fd
-- success returns a new remote fd and marks it in the bitmap
+- success returns a new remote fd and registers it in the intercept fd table
 
 ### 6.3 `close()`
 
@@ -190,10 +204,22 @@ The current examples split the old single-sample story into three pieces:
 - one synchronous RPC in flight at a time
 - fixed stack request/reply buffers
 - single-fragment replies only
+- reconnect semantics for remote fds are not yet defined as a protocol
+  contract
 - no `writev()` intercept
 - no `dup()` integration for remote fds
 - no `poll()` / `epoll()` integration for remote fds
 - remote descriptors are not full first-class Unikraft file objects
+
+Deferred implementation requirements:
+
+- thread-safe RPC serialization and fd-table access
+  - current assumption: single-threaded guest workloads
+- chunked or otherwise scalable remote I/O beyond the current fixed RPC buffers
+- explicit guest/server session contract for remote fd lifetime across
+  transport reset or reconnect
+- authoritative remote file type metadata in the guest fd table
+- shared descriptor state for future `dup()` / offset semantics
 
 ## 9. Architectural Direction
 
@@ -202,7 +228,7 @@ The current design is still a staged bring-up model.
 For larger applications, the next architectural step is not just "add more
 syscalls". It is to move from:
 
-- remote fd bitmap
+- minimal remote fd metadata table
 
 to something closer to:
 

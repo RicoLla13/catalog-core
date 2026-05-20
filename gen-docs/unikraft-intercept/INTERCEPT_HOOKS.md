@@ -64,6 +64,9 @@ Notable gaps:
 - `writev()`
 - `lseek()`
 - `fcntl()`
+- thread-safe RPC/fd-table serialization
+- reconnect-safe remote fd lifetime semantics
+- chunked remote I/O beyond the current fixed-size RPC buffers
 - `poll()` / `epoll()` integration for remote fds
 - `dup()` / `dup2()` / `dup3()` for remote fds
 - `sendfile()` across mixed local/remote backends
@@ -94,6 +97,7 @@ When adding another intercepted syscall:
    current sample story
 7. update `gen-docs/`
 
-If the syscall works on a remote fd, check whether the current bitmap model is
-still enough. If it needs richer descriptor semantics, that is usually a sign
-that the architecture should evolve, not just the syscall count.
+If the syscall works on a remote fd, check whether the current descriptor table
+model is still enough. If it needs richer descriptor semantics, that is
+usually a sign that the architecture should evolve, not just the syscall
+count.

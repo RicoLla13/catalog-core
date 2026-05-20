@@ -29,6 +29,12 @@ Start here:
   - syscall roadmap
   - architectural changes beyond just adding more RPC leaves
 
+- [SERVER_REQUIREMENTS.md](/home/liviu/dev/hearc/tb/unikraft/catalog-core/gen-docs/unikraft-intercept/SERVER_REQUIREMENTS.md)
+  - requirements the guest side should be able to demand from the syscall
+    server
+  - connection/session semantics for remote fds
+  - validation and mapping guarantees
+
 Current guest intercept coverage:
 
 - `access()`
@@ -41,8 +47,8 @@ Current guest intercept coverage:
 
 Short status summary:
 
-- remote file descriptors are still tracked with a bitmap, not a full metadata
-  table
+- remote file descriptors are now tracked in an intercept-owned metadata table
+  keyed by guest-visible fd
 - `read()`, `write()`, `close()`, and `fstat()` only apply to tracked remote
   fds
 - `newfstatat()` is the current path-based metadata primitive
