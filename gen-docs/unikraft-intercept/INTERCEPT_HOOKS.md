@@ -36,20 +36,26 @@ without intercept trying to claim everything.
 
 ## 3. Current Example Workflow
 
-`c-intercept/intercept.c` demonstrates the current remote file subset:
+The current sample set is split by purpose:
 
-1. remote path existence check
-2. remote create/open
-3. remote write
-4. remote close
-5. remote reopen
-6. remote path metadata lookup
-7. remote fd metadata lookup
-8. remote read
-9. remote close
+1. `intercept-simple`
+   - remote path existence checks with `access()`
+2. `intercept-fs`
+   - the current remote file subset:
+   - remote path existence check
+   - remote directory open
+   - relative remote file create/open
+   - remote write
+   - remote close
+   - remote path metadata lookup
+   - remote fd metadata lookup
+   - remote read
+   - remote close
+3. `intercept-http`
+   - remote `access()` preflight plus local guest HTTP sockets
 
-The current sample is intentionally direct and prints with `dprintf()` instead
-of buffered stdio.
+The filesystem-focused sample remains intentionally direct and prints with
+`dprintf()` instead of buffered stdio.
 
 ## 4. What Is Not Hooked Yet
 
@@ -72,8 +78,8 @@ If the goal is broader real-program compatibility, the next priorities are:
 4. `writev()`
 5. `getcwd()`
 
-That order is especially relevant once you move from `c-intercept` toward
-HTTP-server-style workloads.
+That order is especially relevant once you move from `intercept-fs` toward
+remote-file-serving HTTP workloads.
 
 ## 6. Extension Guidance
 
@@ -84,7 +90,8 @@ When adding another intercepted syscall:
 3. add or extend RPC constants in `rpc_internal.h`
 4. implement the leaf codec in `rpc/rpc_<syscall>.c`
 5. wire the syscall hook in the correct Unikraft subsystem
-6. update `c-intercept` if the syscall belongs in the current sample story
+6. update the relevant `intercept-*` sample if the syscall belongs in the
+   current sample story
 7. update `gen-docs/`
 
 If the syscall works on a remote fd, check whether the current bitmap model is

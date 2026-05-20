@@ -1,0 +1,9 @@
+# Configure intercept-http with guest networking and the intercept transport.
+
+config APPINTERCEPTHTTP
+	bool "Configure intercept-http"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

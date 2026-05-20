@@ -1,0 +1,7 @@
+config APPINTERCEPTFS
+	bool "Configure intercept-fs"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

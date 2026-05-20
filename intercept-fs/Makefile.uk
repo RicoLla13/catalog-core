@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptfs))
+
+APPINTERCEPTFS_SRCS-y += $(APPINTERCEPTFS_BASE)/main.c

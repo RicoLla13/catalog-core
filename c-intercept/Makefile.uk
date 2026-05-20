@@ -1,3 +1,0 @@
-$(eval $(call addlib,appcintercept))
-
-APPCINTERCEPT_SRCS-y += $(APPCINTERCEPT_BASE)/intercept.c

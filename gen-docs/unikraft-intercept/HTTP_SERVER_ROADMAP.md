@@ -2,23 +2,24 @@
 
 This document answers a specific question:
 
-- what should change in the current architecture to support a `c-http`-style
-  HTTP server cleanly?
+- what should change in the current architecture to support
+  `intercept-http`-style remote file serving cleanly?
 
 ## 1. Important Starting Point
 
-For the exact `c-http/server.c` sample in this tree, you do not need additional
-intercept syscalls just to let the guest HTTP server run.
+For the current `intercept-http/server.c` sample in this tree, you do not need
+additional intercept syscalls just to let the guest HTTP server run and serve
+its fixed response.
 
 Reason:
 
+- it performs only one intercepted preflight call: `access("/tmp", F_OK)`
 - its networking is local guest networking through Unikraft/lwIP
 - its socket fds are local socket fds, not tracked remote file fds
 - current intercept hooks for `read()`, `write()`, and `close()` already fall
   back to the local path for non-remote fds
 
-So a simple "Hello from Unikraft" HTTP server is not blocked by the current
-intercept architecture.
+So the current sample is not blocked by the current intercept architecture.
 
 ## 2. When Intercept Starts Mattering
 
@@ -157,9 +158,10 @@ is:
 
 ## 7. Bottom Line
 
-For the current `c-http` sample:
+For the current `intercept-http` sample:
 
-- no intercept architecture change is required just to run it
+- no additional intercept architecture change is required just to boot it and
+  serve its fixed reply
 
 For a realistic HTTP server serving remote files:
 

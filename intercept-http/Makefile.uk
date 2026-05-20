@@ -1,0 +1,3 @@
+$(eval $(call addlib,appintercepthttp))
+
+APPINTERCEPTHTTP_SRCS-y += $(APPINTERCEPTHTTP_BASE)/server.c

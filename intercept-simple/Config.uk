@@ -1,0 +1,7 @@
+config APPINTERCEPTSIMPLE
+	bool "Configure intercept-simple"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

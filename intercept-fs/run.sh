@@ -2,6 +2,16 @@
 
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+
+cd "$SCRIPT_DIR"
+./setup.sh
+
+if [ ! -f .config ]; then
+	echo "No .config found. Run 'make menuconfig' first and select x86_64 with QEMU/KVM." >&2
+	exit 1
+fi
+
 make -j"$(nproc)" CFLAGS="-std=gnu17" EXTRA_CFLAGS="-std=gnu17"
 
 sudo mkdir -p /etc/qemu
@@ -23,5 +33,5 @@ sudo qemu-system-x86_64 \
     -cpu max \
     -netdev bridge,id=n0,br=virbr0 \
     -device virtio-net-pci,netdev=n0 \
-    -append "netdev.ip=172.44.0.2/24:172.44.0.1::: --" \
-    -kernel workdir/build/c-intercept_qemu-x86_64
+    -append "intercept-fs_qemu-x86_64 netdev.ip=172.44.0.2/24:172.44.0.1::: -- " \
+    -kernel workdir/build/intercept-fs_qemu-x86_64

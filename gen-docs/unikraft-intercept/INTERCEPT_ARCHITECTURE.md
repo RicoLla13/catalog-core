@@ -162,17 +162,28 @@ normal local Unikraft path.
 
 ## 7. Current Example Workflow
 
-`c-intercept/intercept.c` now demonstrates:
+The current examples split the old single-sample story into three pieces:
 
-1. `access("/tmp", F_OK)`
-2. `openat(AT_FDCWD, "/tmp/aaa", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
-3. `write(fd, "written from example", ...)`
-4. `close(fd)`
-5. `openat(AT_FDCWD, "/tmp/aaa", O_RDONLY, 0)`
-6. `fstatat(AT_FDCWD, "/tmp/aaa", &st, 0)`
-7. `fstat(fd, &st)`
-8. `read(fd, ...)`
-9. `close(fd)`
+- `intercept-simple/main.c`
+  - `access("/tmp", F_OK)`
+  - `access("/tmp/intercept-simple-missing", F_OK)`
+
+- `intercept-fs/main.c`
+  - `access("/tmp", F_OK)`
+  - `openat(AT_FDCWD, "/tmp", O_RDONLY | O_DIRECTORY, 0)`
+  - `openat(dirfd, "intercept-fs.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
+  - two `write()` calls
+  - `close(fd)`
+  - `fstatat(dirfd, "intercept-fs.txt", &st, 0)`
+  - `openat(dirfd, "intercept-fs.txt", O_RDONLY, 0)`
+  - `fstat(fd, &st)`
+  - `read(fd, ...)`
+  - `close(fd)`
+  - `close(dirfd)`
+
+- `intercept-http/server.c`
+  - `access("/tmp", F_OK)` preflight through intercept
+  - local guest HTTP socket flow through lwIP
 
 ## 8. Current Limits
 
@@ -199,5 +210,5 @@ to something closer to:
 - per-fd backend type
 - cleaner mixed local/remote cross-fd behavior
 
-That matters especially for HTTP-server-style workloads. See
-`HTTP_SERVER_ROADMAP.md`.
+That matters especially for `intercept-http` once it starts serving remote
+files. See `HTTP_SERVER_ROADMAP.md`.
