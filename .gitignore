@@ -45,3 +45,6 @@ log.run.*
 
 **/**/.clang-format
 .codex
+
+# Example run all logs
+logs/

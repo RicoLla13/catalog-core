@@ -9,6 +9,8 @@
 
 #define LISTEN_PORT 8080
 #define BUFLEN 2048
+#define OK_PREFIX "[]"
+#define ERR_PREFIX "[x]"
 
 static const char reply[] = "HTTP/1.1 200 OK\r\n"
 			    "Content-Type: text/plain\r\n"
@@ -31,17 +33,17 @@ int main(int argc __attribute__((unused)),
 	errno = 0;
 	rc = access("/tmp", F_OK);
 	if (rc == 0) {
-		printf("intercept preflight: access(\"/tmp\", F_OK) rc=%d errno=%d\n",
+		printf(OK_PREFIX " intercept preflight: access(\"/tmp\", F_OK) rc=%d errno=%d\n",
 		       rc, errno);
 	} else {
 		fprintf(stderr,
-			"intercept preflight failed: access(\"/tmp\", F_OK) rc=%d errno=%d (%s)\n",
+			ERR_PREFIX " intercept preflight failed: access(\"/tmp\", F_OK) rc=%d errno=%d (%s)\n",
 			rc, errno, strerror(errno));
 	}
 
 	srv = socket(AF_INET, SOCK_STREAM, 0);
 	if (srv < 0) {
-		fprintf(stderr, "Failed to create socket: %d\n", errno);
+		fprintf(stderr, ERR_PREFIX " Failed to create socket: %d\n", errno);
 		goto out;
 	}
 
@@ -51,23 +53,23 @@ int main(int argc __attribute__((unused)),
 
 	rc = bind(srv, (struct sockaddr *) &srv_addr, sizeof(srv_addr));
 	if (rc < 0) {
-		fprintf(stderr, "Failed to bind socket: %d\n", errno);
+		fprintf(stderr, ERR_PREFIX " Failed to bind socket: %d\n", errno);
 		goto out_close_srv;
 	}
 
 	rc = listen(srv, 1);
 	if (rc < 0) {
-		fprintf(stderr, "Failed to listen on socket: %d\n", errno);
+		fprintf(stderr, ERR_PREFIX " Failed to listen on socket: %d\n", errno);
 		goto out_close_srv;
 	}
 
 	/* The HTTP loop itself stays on the normal lwIP-backed socket path. */
-	printf("Listening on port %d...\n", LISTEN_PORT);
+	printf(OK_PREFIX " Listening on port %d...\n", LISTEN_PORT);
 	while (1) {
 		client = accept(srv, NULL, 0);
 		if (client < 0) {
 			fprintf(stderr,
-				"Failed to accept incoming connection: %d\n",
+				ERR_PREFIX " Failed to accept incoming connection: %d\n",
 				errno);
 			goto out_close_srv;
 		}
@@ -77,9 +79,9 @@ int main(int argc __attribute__((unused)),
 		/* Reply with a fixed body so the sample focuses on transport behavior. */
 		n = write(client, reply, sizeof(reply) - 1);
 		if (n < 0)
-			fprintf(stderr, "Failed to send a reply\n");
+			fprintf(stderr, ERR_PREFIX " Failed to send a reply\n");
 		else
-			printf("Sent a reply\n");
+			printf(OK_PREFIX " Sent a reply\n");
 
 		close(client);
 	}

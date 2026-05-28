@@ -183,3 +183,7 @@ For a realistic HTTP server serving remote files:
 - the next syscall work is `writev()`, `fcntl()`
 - the next architecture work is a real remote descriptor table and explicit
   mixed-backend behavior
+
+For the concrete server-side fd/session contract that this roadmap depends on,
+see
+[SERVER_REQUIREMENTS.md](/home/liviu/dev/hearc/tb/unikraft/catalog-core/gen-docs/unikraft-intercept/SERVER_REQUIREMENTS.md).

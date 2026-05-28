@@ -1,9 +1,9 @@
-# Intercept Hook Points and Extension Notes
+# Intercept Hook Points
 
 This document explains where the intercept layer is currently wired into
-Unikraft and how the current sample flow exercises it.
+Unikraft and how the focused examples exercise those hook sites.
 
-## 1. Hook Points
+## 1. Hook Sites
 
 Current hook sites:
 
@@ -14,13 +14,13 @@ Current hook sites:
 - `repos/unikraft/lib/posix-fdtab/fdtab.c`
   - `close()`
 - `repos/unikraft/lib/posix-fdio/fd-shim.c`
+  - `fstat()`
+  - `lseek()`
   - `pread64()`
   - `read()`
   - `write()`
-  - `lseek()`
-  - `fstat()`
 
-## 2. Hook Behavior
+## 2. Hook Contract
 
 The common pattern is:
 
@@ -28,40 +28,87 @@ The common pattern is:
 2. if intercept returns anything except `-ENOTSUP`, use that result
 3. otherwise continue with the normal local Unikraft implementation
 
-That pattern is why the same guest can mix:
+That pattern is what allows the same guest to mix:
 
 - local sockets
 - local files
-- remote bridged file syscalls
+- remote bridged filesystem syscalls
 
-without intercept trying to claim everything.
+without intercept claiming every fd blindly.
 
-## 3. Current Example Workflow
+## 3. Example-To-Hook Mapping
 
-The current sample set is split by purpose:
+### 3.1 `intercept-probe`
 
-1. `intercept-probe`
-   - remote path existence checks with `access()`
-2. `intercept-dirfd`
-   - remote dirfd classification and validation
-   - relative `openat()` / `fstatat()` policy
-   - local `ENOTDIR` rejection for tracked remote regular files
-3. `intercept-rw`
-   - tracked remote file create/open
-   - remote write
-   - remote `lseek()`
-   - remote `fstat()`
-   - remote read
-   - remote close
-4. `intercept-offset`
-   - tracked remote file write
-   - remote `pread64()`
-   - offset-stability checks against `SEEK_CUR`
-5. `intercept-http`
-   - remote `access()` preflight plus local guest HTTP sockets
+Exercises:
 
-The filesystem-focused sample remains intentionally direct and prints with
-`dprintf()` instead of buffered stdio.
+- `access()`
+
+Use this sample when you want to isolate:
+
+- transport reachability
+- RPC envelope validity
+- path-only remote checks
+
+### 3.2 `intercept-dirfd`
+
+Exercises:
+
+- `access()`
+- `openat()`
+- `newfstatat()`
+- `close()`
+
+Use this sample when you want to isolate:
+
+- remote dirfd classification
+- relative path policy
+- local `ENOTDIR` rejection for tracked remote regular files
+
+### 3.3 `intercept-rw`
+
+Exercises:
+
+- `access()`
+- `openat()`
+- `write()`
+- `lseek()`
+- `fstat()`
+- `read()`
+- `close()`
+
+Use this sample when you want to isolate:
+
+- sequential remote file I/O
+- current-offset mutation through `lseek()`
+
+### 3.4 `intercept-offset`
+
+Exercises:
+
+- `access()`
+- `openat()`
+- `write()`
+- `lseek()`
+- `pread64()`
+- `close()`
+
+Use this sample when you want to isolate:
+
+- offset-stable positioned reads
+- current `pread64()` protocol limitations
+
+### 3.5 `intercept-http`
+
+Exercises:
+
+- intercepted `access()`
+- normal local socket syscalls through lwIP
+
+Use this sample when you want to isolate:
+
+- mixed local-socket plus remote-filesystem behavior
+- whether intercept correctly ignores non-remote fds
 
 ## 4. What Is Not Hooked Yet
 
@@ -69,55 +116,22 @@ Notable gaps:
 
 - `writev()`
 - `fcntl()`
-- thread-safe RPC/fd-table serialization
-- reconnect-safe remote fd lifetime semantics
-- chunked remote I/O beyond the current fixed-size RPC buffers
-- `poll()` / `epoll()` integration for remote fds
 - `dup()` / `dup2()` / `dup3()` for remote fds
+- `poll()` / `epoll()` integration for remote fds
 - `sendfile()` across mixed local/remote backends
 
-## 5. Recommended Next Syscalls
-
-If the goal is broader real-program compatibility, the next priorities are:
-
-1. `fcntl()`
-2. `writev()`
-3. `getcwd()`
-4. session/reset-safe remote fd lifetime semantics
-5. richer descriptor sharing for future dup-style behavior
-
-That order is especially relevant once you move from `intercept-rw` toward
-remote-file-serving HTTP workloads.
-
-## 6. Extension Guidance
+## 5. Extension Checklist
 
 When adding another intercepted syscall:
 
-1. add public wrapper in `include/uk/intercept.h`
-2. add internal RPC entry point in `intercept_internal.h`
+1. add the public wrapper in `include/uk/intercept.h`
+2. add the internal RPC entry point in `intercept_internal.h`
 3. add or extend RPC constants in `rpc_internal.h`
 4. implement the leaf codec in `rpc/rpc_<syscall>.c`
 5. wire the syscall hook in the correct Unikraft subsystem
-6. update the relevant `intercept-*` sample if the syscall belongs in the
-   current sample story
+6. add or update the focused example that owns that contract
 7. update `gen-docs/`
 
-If the syscall works on a remote fd, check whether the current descriptor table
-model is still enough. If it needs richer descriptor semantics, that is
-usually a sign that the architecture should evolve, not just the syscall
-count.
-
-Priority note:
-
-- tracked remote fds opened through intercept are now classified from remote
-  `fstat()` metadata, so local remote-dirfd validation no longer depends on
-  `O_DIRECTORY` heuristics alone
-
-Current plan status:
-
-1. `[done]` authoritative remote file-vs-directory tracking
-2. `[done]` `lseek()`
-3. `[done]` `pread64()`
-4. `[pending]` `fcntl()`
-5. `[pending]` session/reset contract for remote fd lifetime
-6. `[pending]` `writev()`
+If the syscall works on a remote fd, check whether the current descriptor-table
+model is still sufficient. If it is not, that is usually a sign that the
+architecture needs to evolve, not just the syscall count.

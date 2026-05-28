@@ -6,6 +6,35 @@ able to demand from the syscall-server implementation.
 It exists to make the guest/server contract explicit before more features are
 added.
 
+## 0. Server Worklist Summary
+
+If this document is being used as a handoff for syscall-server work, the
+highest-priority fd-related items are:
+
+1. choose and document the remote-fd session model
+   - recommended short-term choice: session-bound remote fds
+2. make the fd token contract explicit
+   - remote fds are server-issued session tokens, not guest fd numbers
+3. guarantee strict fd validation on every fd-based RPC
+   - invalid tokens must fail cleanly with `EBADF`
+4. upgrade `pread64()` to a true 64-bit wire contract
+   - change protocol `pread.offset` from XDR `long` to XDR `hyper`
+5. prepare for upcoming guest-side `fcntl()`
+   - define which commands are supported for remote regular files first
+6. prepare for future `writev()`
+   - decide how vectored payloads will be encoded and validated
+
+Why this order:
+
+- session semantics and fd token rules define the correctness envelope for all
+  later fd-based syscalls
+- validation rules prevent stale-token or bad-translation bugs from leaking
+  into host syscalls
+- `pread64()` is already implemented guest-side but still constrained by the
+  old protocol field width
+- `fcntl()` and `writev()` are the next practical compatibility steps after the
+  current guest-side coverage
+
 ## 1. Connection and Session Semantics
 
 The most important open contract is what happens when the guest transport
@@ -53,6 +82,15 @@ Server requirements:
 - the mapping must remain internally consistent until close or session teardown
 - invalid remote fds must fail cleanly with `EBADF`
 
+Operational interpretation:
+
+- the guest may show fd `4` while the server internally maps that request to
+  some unrelated host fd
+- the guest-visible fd number must never be treated as the server-side object
+  identity
+- the server must be free to translate from remote token to host fd through its
+  own session-scoped table
+
 ## 3. File Type / Metadata Expectations
 
 The guest will need authoritative file type information for stronger remote-fd
@@ -76,8 +114,10 @@ Minimum expectation:
 - `openat()` validates translated `dirfd`
 - `close()` validates translated `fd`
 - `read()` validates translated `fd`
+- `pread64()` validates translated `fd`
 - `write()` validates translated `fd`
 - `fstat()` validates translated `fd`
+- `lseek()` validates translated `fd`
 - `newfstatat()` validates translated `dirfd`
 
 If translation fails, the server should return:
@@ -86,6 +126,13 @@ If translation fails, the server should return:
 - `err = EBADF`
 
 without issuing the host syscall.
+
+Reason:
+
+- the guest now performs more local policy checks, but fd-token correctness is
+  still ultimately enforced at the server translation boundary
+- every fd-based leaf must fail in the same way for bad remote tokens so the
+  guest sees a stable contract
 
 ## 5. Reuse and Recycling
 
@@ -102,6 +149,13 @@ The safest model is:
 
 - no accidental stale-fd aliasing within a live session
 
+Practical recommendation:
+
+- do not immediately recycle remote fd tokens within a live session unless the
+  server can prove stale uses cannot alias a newly opened object
+- if immediate reuse is kept for implementation simplicity, document it
+  explicitly and treat it as part of the protocol contract
+
 ## 6. Future Feature Requirements
 
 Before the guest can rely on broader fd behavior, the server side should be
@@ -113,6 +167,32 @@ prepared to support:
 - `fcntl()`
 - `dup()` / `F_DUPFD`-style duplication semantics
 - explicit session/reset behavior for all fd mappings
+
+## 6.0 Upcoming Guest Expectation: `fcntl()` Scope
+
+The next likely guest-side fd-control work is a narrow `fcntl()` subset for
+tracked remote regular files.
+
+Recommended first supported command set:
+
+- `F_GETFL`
+- `F_SETFL`
+- `F_GETFD`
+- `F_SETFD`
+
+Why this subset first:
+
+- it gives the guest basic fd-state queries and flag updates without forcing
+  descriptor-sharing semantics immediately
+- it avoids mixing in duplication behavior such as `F_DUPFD`, which would need
+  shared descriptor state rather than per-fd snapshots
+
+Server-side preparation request:
+
+- decide which of the above commands are supported for remote regular files
+- define uniform error behavior for unsupported commands
+- document whether any command is intentionally rejected for remote
+  descriptors even if the host kernel supports it
 
 ## 6.1 Immediate Protocol Upgrade Request: True 64-bit `pread64()` Offsets
 

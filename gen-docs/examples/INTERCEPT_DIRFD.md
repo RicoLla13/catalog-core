@@ -24,6 +24,5 @@ problem is likely in tracked remote fd classification or local dirfd checks.
 ## Current Boundary
 
 This sample may create a remote file as part of its dirfd checks, but it is not
-the place for broader sequential I/O, offset semantics, or future `pread64()`
-tests. Those belong in `intercept-rw` or the dedicated `intercept-offset`
-sample.
+the place for broader sequential I/O or offset semantics. Those belong in
+`intercept-rw` or the dedicated `intercept-offset` sample.

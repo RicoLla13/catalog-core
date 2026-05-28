@@ -141,7 +141,7 @@ Current assumptions:
 
 ### 5.8 `rpc_pread.c`
 
-- remote fd, explicit 64-bit offset, and count
+- remote fd, explicit offset argument, and count
 - variable-length reply payload
 - current wire compatibility note:
   - the existing syscall-server protocol still defines `pread.offset` as XDR
