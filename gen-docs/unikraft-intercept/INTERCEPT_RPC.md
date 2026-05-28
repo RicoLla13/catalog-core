@@ -32,6 +32,7 @@ Syscall-server program and procedure IDs:
 - `SYSCALL_WRITE = 6U`
 - `SYSCALL_NEWFSTATAT = 9U`
 - `SYSCALL_FSTAT = 10U`
+- `SYSCALL_LSEEK = 13U`
 - `SYSCALL_ACCESS = 14U`
 
 The `SYSCALL_*` values come from `repos/syscall-server/src/protocol/protocol.x`.
@@ -69,7 +70,7 @@ responding at the RPC layer.
 Shared helpers in `rpc_xdr.c` currently cover:
 
 - `u32` encode/decode
-- `u64` decode
+- `u64` encode/decode
 - XDR opaque field encode/skip/decode
 - bounded path length measurement via `strnlen()`
 
@@ -140,6 +141,11 @@ Current assumptions:
 ### 5.8 `rpc_write.c`
 
 - remote fd plus variable-length request payload
+
+### 5.9 `rpc_lseek.c`
+
+- remote fd, 64-bit offset, and whence
+- 64-bit result offset plus errno
 
 ## 6. Error Model
 

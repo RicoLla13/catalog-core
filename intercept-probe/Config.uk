@@ -1,0 +1,7 @@
+config APPINTERCEPTPROBE
+	bool "Configure intercept-probe"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

@@ -16,6 +16,7 @@ Current hook sites:
 - `repos/unikraft/lib/posix-fdio/fd-shim.c`
   - `read()`
   - `write()`
+  - `lseek()`
   - `fstat()`
 
 ## 2. Hook Behavior
@@ -38,20 +39,20 @@ without intercept trying to claim everything.
 
 The current sample set is split by purpose:
 
-1. `intercept-simple`
+1. `intercept-probe`
    - remote path existence checks with `access()`
-2. `intercept-fs`
-   - the current remote file subset:
-   - remote path existence check
-   - remote directory open
-   - relative remote file create/open
+2. `intercept-dirfd`
+   - remote dirfd classification and validation
+   - relative `openat()` / `fstatat()` policy
+   - local `ENOTDIR` rejection for tracked remote regular files
+3. `intercept-rw`
+   - tracked remote file create/open
    - remote write
-   - remote close
-   - remote path metadata lookup
-   - remote fd metadata lookup
+   - remote `lseek()`
+   - remote `fstat()`
    - remote read
    - remote close
-3. `intercept-http`
+4. `intercept-http`
    - remote `access()` preflight plus local guest HTTP sockets
 
 The filesystem-focused sample remains intentionally direct and prints with
@@ -62,7 +63,6 @@ The filesystem-focused sample remains intentionally direct and prints with
 Notable gaps:
 
 - `writev()`
-- `lseek()`
 - `fcntl()`
 - thread-safe RPC/fd-table serialization
 - reconnect-safe remote fd lifetime semantics
@@ -75,13 +75,13 @@ Notable gaps:
 
 If the goal is broader real-program compatibility, the next priorities are:
 
-1. `lseek()`
+1. `pread64()`
 2. `fcntl()`
-3. `pread64()`
-4. `writev()`
-5. `getcwd()`
+3. `writev()`
+4. `getcwd()`
+5. session/reset-safe remote fd lifetime semantics
 
-That order is especially relevant once you move from `intercept-fs` toward
+That order is especially relevant once you move from `intercept-rw` toward
 remote-file-serving HTTP workloads.
 
 ## 6. Extension Guidance
@@ -111,7 +111,7 @@ Priority note:
 Current plan status:
 
 1. `[done]` authoritative remote file-vs-directory tracking
-2. `[pending]` `lseek()`
+2. `[done]` `lseek()`
 3. `[pending]` `pread64()`
 4. `[pending]` `fcntl()`
 5. `[pending]` session/reset contract for remote fd lifetime

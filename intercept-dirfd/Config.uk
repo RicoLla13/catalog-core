@@ -1,0 +1,7 @@
+config APPINTERCEPTDIRFD
+	bool "Configure intercept-dirfd"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

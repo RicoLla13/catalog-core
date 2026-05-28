@@ -42,6 +42,7 @@ Current guest intercept coverage:
 - `close()`
 - `newfstatat()`
 - `fstat()`
+- `lseek()`
 - `read()`
 - `write()`
 

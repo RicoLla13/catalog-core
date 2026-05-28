@@ -24,6 +24,7 @@ Current guest-side coverage:
 - `close()`
 - `newfstatat()`
 - `fstat()`
+- `lseek()`
 - `read()`
 - `write()`
 
@@ -69,6 +70,7 @@ When enabled, `include/uk/intercept.h` exposes:
 - `uk_intercept_close(...)`
 - `uk_intercept_newfstatat(...)`
 - `uk_intercept_fstat(...)`
+- `uk_intercept_lseek(...)`
 - `uk_intercept_read(...)`
 - `uk_intercept_write(...)`
 
@@ -174,26 +176,45 @@ normal local Unikraft path.
 - only intercepted for tracked remote fds
 - local socket or local file fds still go through the standard guest path
 
+### 6.7 `lseek()`
+
+- only intercepted for tracked remote fds
+- updates the intercept table's cached offset field on success
+- local socket or local file fds still go through the standard guest path
+
 ## 7. Current Example Workflow
 
-The current examples split the old single-sample story into three pieces:
+The active examples are now split by contract:
 
-- `intercept-simple/main.c`
+- `intercept-probe/main.c`
   - `access("/tmp", F_OK)`
-  - `access("/tmp/intercept-simple-missing", F_OK)`
+  - `access("/tmp/intercept-probe-missing", F_OK)`
 
-- `intercept-fs/main.c`
+- `intercept-dirfd/main.c`
   - `access("/tmp", F_OK)`
   - `openat(AT_FDCWD, "/tmp", O_RDONLY | O_DIRECTORY, 0)`
-  - `openat(dirfd, "intercept-fs.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
-  - two `write()` calls
+  - `openat(AT_FDCWD, "/tmp", O_RDONLY, 0)`
+  - `openat(classified_dirfd, "intercept-dirfd.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
   - `close(fd)`
-  - `fstatat(dirfd, "intercept-fs.txt", &st, 0)`
-  - `openat(dirfd, "intercept-fs.txt", O_RDONLY, 0)`
+  - `fstatat(strict_dirfd, "intercept-dirfd.txt", &st, 0)`
+  - `fstatat(classified_dirfd, "intercept-dirfd.txt", &st, 0)`
+  - `openat(strict_dirfd, "intercept-dirfd.txt", O_RDONLY, 0)`
+  - `fstatat(filefd, "intercept-dirfd-missing-child", &st, 0)` -> `ENOTDIR`
+  - `close(fd)`
+  - `close(classified_dirfd)`
+  - `close(strict_dirfd)`
+
+- `intercept-rw/main.c`
+  - `access("/tmp", F_OK)`
+  - `openat(AT_FDCWD, "/tmp/intercept-rw.txt", O_CREAT | O_TRUNC | O_RDWR, 0644)`
+  - two `write()` calls
+  - `lseek(fd, 0, SEEK_CUR)`
+  - `lseek(fd, 8, SEEK_SET)`
+  - `read(fd, ...)`
+  - `lseek(fd, 0, SEEK_SET)`
   - `fstat(fd, &st)`
   - `read(fd, ...)`
   - `close(fd)`
-  - `close(dirfd)`
 
 - `intercept-http/server.c`
   - `access("/tmp", F_OK)` preflight through intercept
@@ -285,7 +306,7 @@ Status markers:
      successful `openat()`
    - tighten local remote-dirfd validation once the guest table stores real
      type information
-2. `[pending]` guest-side `lseek()`
+2. `[done]` guest-side `lseek()`
 3. `[pending]` guest-side `pread64()`
 4. `[pending]` guest-side `fcntl()`
 5. `[pending]` guest/server session contract for remote fd lifetime

@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptrw))
+
+APPINTERCEPTRW_SRCS-y += $(APPINTERCEPTRW_BASE)/main.c

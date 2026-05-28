@@ -1,0 +1,7 @@
+config APPINTERCEPTRW
+	bool "Configure intercept-rw"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

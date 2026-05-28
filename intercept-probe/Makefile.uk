@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptprobe))
+
+APPINTERCEPTPROBE_SRCS-y += $(APPINTERCEPTPROBE_BASE)/main.c

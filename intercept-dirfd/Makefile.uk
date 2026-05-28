@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptdirfd))
+
+APPINTERCEPTDIRFD_SRCS-y += $(APPINTERCEPTDIRFD_BASE)/main.c

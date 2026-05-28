@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
 	int rc;
 	int failed = 0;
 	struct stat st;
+	off_t pos;
 	ssize_t nread;
 	ssize_t nwritten;
 
@@ -196,6 +197,18 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	errno = 0;
+	pos = lseek(fd, 8, SEEK_SET);
+	if (pos >= 0) {
+		dprintf(1, "lseek(%d, 8, SEEK_SET) succeeded: off=%lld errno=%d\n",
+			fd, (long long) pos, errno);
+	} else {
+		dprintf(1, "lseek(%d, 8, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
+			fd, (long long) pos, errno, strerror(errno));
+		failed = 1;
+		goto out;
+	}
+
 	memset(&st, 0, sizeof(st));
 	errno = 0;
 	rc = fstat(fd, &st);
@@ -223,6 +236,34 @@ int main(int argc, char *argv[])
 	} else {
 		dprintf(1, "read(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
 			sizeof(buf) - 1, nread, errno, strerror(errno));
+		failed = 1;
+		goto out;
+	}
+
+	errno = 0;
+	pos = lseek(fd, 0, SEEK_SET);
+	if (pos >= 0) {
+		dprintf(1, "lseek(%d, 0, SEEK_SET) succeeded: off=%lld errno=%d\n",
+			fd, (long long) pos, errno);
+	} else {
+		dprintf(1, "lseek(%d, 0, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
+			fd, (long long) pos, errno, strerror(errno));
+		failed = 1;
+		goto out;
+	}
+
+	memset(buf, 0, sizeof(buf));
+	errno = 0;
+	nread = read(fd, buf, sizeof(buf) - 1);
+	if (nread >= 0) {
+		buf[nread] = '\0';
+		dprintf(1,
+			"read(%d, %zu) after rewind succeeded: rc=%zd errno=%d data=\"%s\"\n",
+			fd, sizeof(buf) - 1, nread, errno, buf);
+	} else {
+		dprintf(1,
+			"read(%d, %zu) after rewind failed: rc=%zd errno=%d (%s)\n",
+			fd, sizeof(buf) - 1, nread, errno, strerror(errno));
 		failed = 1;
 		goto out;
 	}
