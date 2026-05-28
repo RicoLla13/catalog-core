@@ -87,6 +87,15 @@ Current state:
   - remote server fd
   - open flags and mode
 
+Important caveat:
+
+- tracked remote fds opened through intercept are now classified from remote
+  `fstat()` metadata
+- this removes the old `O_DIRECTORY`-only heuristic for local remote-dirfd
+  validation
+- the current table is still minimal and does not yet carry richer descriptor
+  metadata beyond file-vs-directory
+
 For HTTP-server-style workloads, that will become too weak.
 
 You should expect to grow toward:
@@ -139,13 +148,18 @@ That combination is valid, but you should design for it explicitly:
 If your goal is "serve remote files over a local guest HTTP socket", the most
 useful order is:
 
-1. `lseek()`
-2. `pread64()`
-3. `writev()`
-4. `fcntl()`
-5. richer descriptor metadata table beyond the current minimal entries
-6. `sendfile()` strategy for mixed local-socket / remote-file paths
-7. `poll()` / `epoll()` only if the server design actually needs it
+1. `[done]` authoritative file-vs-directory tracking in the guest fd table
+2. `[pending]` `lseek()`
+3. `[pending]` `pread64()`
+4. `[pending]` `fcntl()`
+5. `[pending]` guest/server session contract for remote fd lifetime
+6. `[pending]` `writev()`
+7. `[pending]` richer descriptor metadata table beyond the current minimal
+   entries
+8. `[pending]` `sendfile()` strategy for mixed local-socket / remote-file
+   paths
+9. `[pending]` `poll()` / `epoll()` only if the server design actually needs
+   it
 
 ## 6. Practical Architecture Markers
 
@@ -153,6 +167,7 @@ If you want a checklist of concrete architecture changes to watch for, here it
 is:
 
 - add richer remote descriptor metadata, not just the current minimal table
+- make file-vs-directory classification authoritative, not heuristic
 - keep backend dispatch explicit per fd
 - define mixed-backend behavior for two-fd syscalls
 - add explicit guest/server session semantics for remote fd lifetime

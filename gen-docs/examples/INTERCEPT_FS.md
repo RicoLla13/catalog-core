@@ -9,9 +9,13 @@ intercept design.
 
 - `access()` on `/tmp`
 - `openat()` on `/tmp` to obtain a tracked remote directory fd
+- `openat()` on `/tmp` without `O_DIRECTORY`, followed by `fstatat()` through
+  that fd to verify post-open file-type classification
 - relative `openat(dirfd, "intercept-fs.txt", ...)`
 - `write()` on a tracked remote file fd
 - `fstatat(dirfd, "intercept-fs.txt", ...)`
+- `fstatat(filefd, "child", ...)` expecting local `ENOTDIR` rejection for a
+  tracked remote regular file
 - `fstat(fd, ...)`
 - `read(fd, ...)`
 - `close()` on both file and directory fds
@@ -90,27 +94,22 @@ Fix:
 - treat `AT_FDCWD` as a valid special dirfd, even though it is negative
 - only return early for real negative errno values
 
-### 3. Remote dirfd classification is still conservative
+### 3. Remote dirfd classification moved from heuristic to authoritative
 
-Problem:
+Previous problem:
 
-- the current guest fd table records a backend kind, but it does not yet carry
-  authoritative file type metadata from the server
-- using `O_DIRECTORY` alone to decide whether a tracked remote fd may be used
-  as a dirfd is too strict
+- the guest fd table used `O_DIRECTORY` as a heuristic for whether a tracked
+  remote fd could act as a dirfd
 
-Observed risk:
+Fix:
 
-- a real remote directory opened without `O_DIRECTORY` can still be valid for
-  later relative `openat()` / `newfstatat()`
-- rejecting it locally would produce a guest-side false `ENOTDIR`
+- after successful remote `openat()`, the guest now issues remote `fstat()`
+  and classifies the tracked fd from `st_mode`
+- tracked remote regular files can now be rejected locally as invalid dirfds
 
-Current mitigation:
+How the sample checks it:
 
-- the guest now lets the server remain the source of truth for dirfd validity
-  on tracked remote fds
-
-Future goal:
-
-- store authoritative remote file type metadata in the guest fd table and
-  re-tighten local dirfd checks once that metadata exists
+- it opens `/tmp` without `O_DIRECTORY` and successfully reuses that fd as a
+  dirfd
+- it opens `intercept-fs.txt` as a regular file and expects local `ENOTDIR`
+  when that fd is used as a dirfd

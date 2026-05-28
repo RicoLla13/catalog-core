@@ -125,12 +125,12 @@ Each table entry currently stores:
 
 Current caveat:
 
-- the table does not yet carry authoritative file type metadata from the
-  server
-- backend kind is therefore not strong enough to reject all invalid dirfd uses
-  locally
-- the server remains the current source of truth for `ENOTDIR` on fd-based path
-  operations
+- tracked remote fds returned by `openat()` are now classified from a post-open
+  remote `fstat()`
+- that makes the file-vs-directory tag authoritative for the current tracked-fd
+  model
+- this costs one extra RPC after each successful remote `openat()`
+- richer descriptor metadata beyond file-vs-directory is still deferred
 
 This is enough for the current staged subset:
 
@@ -218,7 +218,6 @@ Deferred implementation requirements:
 - chunked or otherwise scalable remote I/O beyond the current fixed RPC buffers
 - explicit guest/server session contract for remote fd lifetime across
   transport reset or reconnect
-- authoritative remote file type metadata in the guest fd table
 - shared descriptor state for future `dup()` / offset semantics
 
 ## 9. Architectural Direction
@@ -238,3 +237,58 @@ to something closer to:
 
 That matters especially for `intercept-http` once it starts serving remote
 files. See `HTTP_SERVER_ROADMAP.md`.
+
+### 9.1 Authoritative File-vs-Directory Tracking
+
+Correctly distinguishing remote regular files from remote directories was the
+next descriptor-model correctness task.
+
+Why it matters:
+
+- relative `openat()` and `newfstatat()` should eventually reject invalid
+  remote dirfds locally
+- the current table only has a heuristic backend tag derived from open flags
+- that heuristic is not authoritative enough to enforce `ENOTDIR` safely
+
+Possible fixes considered:
+
+1. post-open `fstat()` classification
+   - after a successful remote `openat()`, issue remote `fstat()`
+   - classify the guest fd from `st_mode`
+   - simplest incremental path, but adds an extra RPC on open
+
+2. extend `openat()` RPC response with file type metadata
+   - have the server return file type bits together with the remote fd
+   - avoids a second RPC
+   - requires a protocol change on both guest and server
+
+3. add a dedicated descriptor metadata RPC
+   - keep `openat()` lean
+   - fetch richer per-fd metadata only when needed
+   - useful if the table later needs more than just file type
+
+Chosen direction:
+
+- current implementation: post-open `fstat()` classification
+- longer term: extend the RPC contract so `openat()` can return authoritative
+  descriptor metadata directly
+
+### 9.2 Current Implementation Plan
+
+Status markers:
+
+- `[done]` implemented in the current guest intercept layer
+- `[pending]` agreed next step, not started
+
+1. `[done]` authoritative remote file-vs-directory tracking
+   - classify each tracked remote fd from remote `fstat().st_mode` after
+     successful `openat()`
+   - tighten local remote-dirfd validation once the guest table stores real
+     type information
+2. `[pending]` guest-side `lseek()`
+3. `[pending]` guest-side `pread64()`
+4. `[pending]` guest-side `fcntl()`
+5. `[pending]` guest/server session contract for remote fd lifetime
+   - preferred short-term policy: session-bound remote fds with guest-side
+     invalidation on transport reset
+6. `[pending]` `writev()` protocol and guest/server implementation

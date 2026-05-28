@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
 	char buf[160];
 	const char *dir_path = "/tmp";
 	const char *relative_file = "intercept-fs.txt";
+	const char *nested_missing = "intercept-fs-missing-child";
 	const char *first = "written from intercept-fs";
 	const char *second = " using relative openat";
 	int dirfd = -1;
@@ -47,6 +48,51 @@ int main(int argc, char *argv[])
 			"openat(AT_FDCWD, \"%s\", O_RDONLY|O_DIRECTORY) failed: fd=%d errno=%d (%s)\n",
 			dir_path, dirfd, errno, strerror(errno));
 		return 1;
+	}
+
+	/*
+	 * Re-open the same directory without O_DIRECTORY. This should still be
+	 * classified as a remote directory by post-open fstat metadata.
+	 */
+	errno = 0;
+	fd = openat(AT_FDCWD, dir_path, O_RDONLY, 0);
+	if (fd >= 0) {
+		dprintf(1,
+			"openat(AT_FDCWD, \"%s\", O_RDONLY) succeeded: fd=%d errno=%d\n",
+			dir_path, fd, errno);
+	} else {
+		dprintf(1,
+			"openat(AT_FDCWD, \"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
+			dir_path, fd, errno, strerror(errno));
+		return 1;
+	}
+
+	memset(&st, 0, sizeof(st));
+	errno = 0;
+	rc = fstatat(fd, relative_file, &st, 0);
+	if (rc == 0) {
+		dprintf(1,
+			"fstatat(%d, \"%s\", 0) via non-O_DIRECTORY dirfd succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
+			fd, relative_file, rc, errno, st.st_mode,
+			(long long) st.st_size, (unsigned long) st.st_nlink);
+	} else {
+		dprintf(1,
+			"fstatat(%d, \"%s\", 0) via non-O_DIRECTORY dirfd failed: rc=%d errno=%d (%s)\n",
+			fd, relative_file, rc, errno, strerror(errno));
+		failed = 1;
+		goto out;
+	}
+
+	errno = 0;
+	rc = close(fd);
+	if (rc == 0) {
+		dprintf(1, "close(%d) succeeded: rc=%d errno=%d\n", fd, rc, errno);
+		fd = -1;
+	} else {
+		dprintf(1, "close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+			errno, strerror(errno));
+		failed = 1;
+		goto out;
 	}
 
 	errno = 0;
@@ -127,6 +173,25 @@ int main(int argc, char *argv[])
 		dprintf(1,
 			"openat(%d, \"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
 			dirfd, relative_file, fd, errno, strerror(errno));
+		failed = 1;
+		goto out;
+	}
+
+	/*
+	 * A tracked remote regular file must not be accepted as a dirfd. The
+	 * guest should now reject this locally with ENOTDIR.
+	 */
+	memset(&st, 0, sizeof(st));
+	errno = 0;
+	rc = fstatat(fd, nested_missing, &st, 0);
+	if (rc == -1 && errno == ENOTDIR) {
+		dprintf(1,
+			"fstatat(%d, \"%s\", 0) on regular-file dirfd correctly failed: rc=%d errno=%d (%s)\n",
+			fd, nested_missing, rc, errno, strerror(errno));
+	} else {
+		dprintf(1,
+			"fstatat(%d, \"%s\", 0) on regular-file dirfd returned unexpected result: rc=%d errno=%d (%s)\n",
+			fd, nested_missing, rc, errno, strerror(errno));
 		failed = 1;
 		goto out;
 	}

@@ -101,3 +101,18 @@ If the syscall works on a remote fd, check whether the current descriptor table
 model is still enough. If it needs richer descriptor semantics, that is
 usually a sign that the architecture should evolve, not just the syscall
 count.
+
+Priority note:
+
+- tracked remote fds opened through intercept are now classified from remote
+  `fstat()` metadata, so local remote-dirfd validation no longer depends on
+  `O_DIRECTORY` heuristics alone
+
+Current plan status:
+
+1. `[done]` authoritative remote file-vs-directory tracking
+2. `[pending]` `lseek()`
+3. `[pending]` `pread64()`
+4. `[pending]` `fcntl()`
+5. `[pending]` session/reset contract for remote fd lifetime
+6. `[pending]` `writev()`
