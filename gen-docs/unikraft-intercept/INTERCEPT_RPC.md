@@ -29,6 +29,7 @@ Syscall-server program and procedure IDs:
 - `SYSCALL_OPENAT = 2U`
 - `SYSCALL_CLOSE = 3U`
 - `SYSCALL_READ = 4U`
+- `SYSCALL_PREAD = 5U`
 - `SYSCALL_WRITE = 6U`
 - `SYSCALL_NEWFSTATAT = 9U`
 - `SYSCALL_FSTAT = 10U`
@@ -138,11 +139,21 @@ Current assumptions:
 - remote fd plus count
 - variable-length reply payload
 
-### 5.8 `rpc_write.c`
+### 5.8 `rpc_pread.c`
+
+- remote fd, explicit 64-bit offset, and count
+- variable-length reply payload
+- current wire compatibility note:
+  - the existing syscall-server protocol still defines `pread.offset` as XDR
+    `long`
+  - the guest therefore currently sends only offsets representable in signed
+    32-bit range until the protocol is upgraded
+
+### 5.9 `rpc_write.c`
 
 - remote fd plus variable-length request payload
 
-### 5.9 `rpc_lseek.c`
+### 5.10 `rpc_lseek.c`
 
 - remote fd, 64-bit offset, and whence
 - 64-bit result offset plus errno

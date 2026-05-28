@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptoffset))
+
+APPINTERCEPTOFFSET_SRCS-y += $(APPINTERCEPTOFFSET_BASE)/main.c

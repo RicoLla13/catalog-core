@@ -14,6 +14,7 @@ Current hook sites:
 - `repos/unikraft/lib/posix-fdtab/fdtab.c`
   - `close()`
 - `repos/unikraft/lib/posix-fdio/fd-shim.c`
+  - `pread64()`
   - `read()`
   - `write()`
   - `lseek()`
@@ -52,7 +53,11 @@ The current sample set is split by purpose:
    - remote `fstat()`
    - remote read
    - remote close
-4. `intercept-http`
+4. `intercept-offset`
+   - tracked remote file write
+   - remote `pread64()`
+   - offset-stability checks against `SEEK_CUR`
+5. `intercept-http`
    - remote `access()` preflight plus local guest HTTP sockets
 
 The filesystem-focused sample remains intentionally direct and prints with
@@ -75,11 +80,11 @@ Notable gaps:
 
 If the goal is broader real-program compatibility, the next priorities are:
 
-1. `pread64()`
-2. `fcntl()`
-3. `writev()`
-4. `getcwd()`
-5. session/reset-safe remote fd lifetime semantics
+1. `fcntl()`
+2. `writev()`
+3. `getcwd()`
+4. session/reset-safe remote fd lifetime semantics
+5. richer descriptor sharing for future dup-style behavior
 
 That order is especially relevant once you move from `intercept-rw` toward
 remote-file-serving HTTP workloads.
@@ -112,7 +117,7 @@ Current plan status:
 
 1. `[done]` authoritative remote file-vs-directory tracking
 2. `[done]` `lseek()`
-3. `[pending]` `pread64()`
+3. `[done]` `pread64()`
 4. `[pending]` `fcntl()`
 5. `[pending]` session/reset contract for remote fd lifetime
 6. `[pending]` `writev()`

@@ -1,0 +1,7 @@
+config APPINTERCEPTOFFSET
+	bool "Configure intercept-offset"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

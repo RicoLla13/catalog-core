@@ -114,6 +114,55 @@ prepared to support:
 - `dup()` / `F_DUPFD`-style duplication semantics
 - explicit session/reset behavior for all fd mappings
 
+## 6.1 Immediate Protocol Upgrade Request: True 64-bit `pread64()` Offsets
+
+The current protocol still defines `pread.offset` as XDR `long`.
+
+Current impact:
+
+- the guest-side `pread64()` hook is implemented
+- but the guest must currently stay within signed 32-bit offsets when talking
+  to the existing server
+- this is a protocol compatibility limitation, not the desired long-term
+  contract
+
+Why this should be fixed:
+
+- `pread64()` is expected to support large-file offsets beyond 2 GiB
+- the guest API already exposes an `off_t`-based positioned-read interface
+- the guest intercept layer already treats `lseek()` offsets as 64-bit on the
+  wire
+- keeping `pread64()` at 32-bit while `lseek()` is 64-bit creates an avoidable
+  semantic mismatch
+- realistic follow-on workloads such as large assets, disk images, or large log
+  files will eventually need true 64-bit positioned reads
+
+Requested server/protocol change:
+
+1. update `repos/syscall-server/src/protocol/protocol.x`
+   - change `pread_request.offset` from XDR `long` to XDR `hyper`
+2. regenerate the protocol bindings used by the syscall server
+3. update the server-side `pread` implementation to consume the 64-bit offset
+   contract explicitly
+4. keep result/error behavior unchanged
+
+Expected compatibility outcome:
+
+- after the protocol upgrade, guest `pread64()` should accept the same offset
+  range that the guest `off_t` can represent on the target
+- positioned reads should remain offset-stable with respect to the tracked fd's
+  current file position
+- the guest-side temporary 32-bit offset guard can then be removed
+
+Acceptance criteria for the server-side handoff:
+
+- `pread64(fd, buf, count, large_offset)` works correctly for offsets beyond
+  signed 32-bit range
+- no field-order mismatch remains between guest and server logs
+- small-offset behavior remains unchanged for current samples
+- the `intercept-offset` sample continues to pass, and a future large-offset
+  variant can be added on top
+
 ## 7. Immediate Takeaway
 
 The guest intercept side should not assume reconnect-safe remote fd state until

@@ -25,6 +25,7 @@ Current guest-side coverage:
 - `newfstatat()`
 - `fstat()`
 - `lseek()`
+- `pread64()`
 - `read()`
 - `write()`
 
@@ -50,8 +51,10 @@ RPC layer:
 - `repos/unikraft/lib/intercept/rpc/rpc_close.c`
 - `repos/unikraft/lib/intercept/rpc/rpc_newfstatat.c`
 - `repos/unikraft/lib/intercept/rpc/rpc_fstat.c`
+- `repos/unikraft/lib/intercept/rpc/rpc_pread.c`
 - `repos/unikraft/lib/intercept/rpc/rpc_read.c`
 - `repos/unikraft/lib/intercept/rpc/rpc_write.c`
+- `repos/unikraft/lib/intercept/rpc/rpc_lseek.c`
 - `repos/unikraft/lib/intercept/rpc/rpc_internal.h`
 
 Hook sites outside the library:
@@ -71,6 +74,7 @@ When enabled, `include/uk/intercept.h` exposes:
 - `uk_intercept_newfstatat(...)`
 - `uk_intercept_fstat(...)`
 - `uk_intercept_lseek(...)`
+- `uk_intercept_pread(...)`
 - `uk_intercept_read(...)`
 - `uk_intercept_write(...)`
 
@@ -138,10 +142,12 @@ This is enough for the current staged subset:
 
 - `close()`
 - `fstat()`
+- `lseek()`
+- `pread64()`
 - `read()`
 - `write()`
 
-All four only intercept tracked remote fds. Non-remote fds still follow the
+All six only intercept tracked remote fds. Non-remote fds still follow the
 normal local Unikraft path.
 
 ## 6. Current Syscall Semantics
@@ -182,6 +188,12 @@ normal local Unikraft path.
 - updates the intercept table's cached offset field on success
 - local socket or local file fds still go through the standard guest path
 
+### 6.8 `pread64()`
+
+- only intercepted for tracked remote fds
+- uses an explicit offset and does not mutate the tracked fd's cached offset
+- local socket or local file fds still go through the standard guest path
+
 ## 7. Current Example Workflow
 
 The active examples are now split by contract:
@@ -214,6 +226,16 @@ The active examples are now split by contract:
   - `lseek(fd, 0, SEEK_SET)`
   - `fstat(fd, &st)`
   - `read(fd, ...)`
+  - `close(fd)`
+
+- `intercept-offset/main.c`
+  - `access("/tmp", F_OK)`
+  - `openat(AT_FDCWD, "/tmp/intercept-offset.txt", O_CREAT | O_TRUNC | O_RDWR, 0644)`
+  - `write(fd, ...)`
+  - `lseek(fd, 0, SEEK_CUR)`
+  - `pread(fd, ..., 0)`
+  - `pread(fd, ..., 7)`
+  - `lseek(fd, 0, SEEK_CUR)` unchanged
   - `close(fd)`
 
 - `intercept-http/server.c`
@@ -307,7 +329,7 @@ Status markers:
    - tighten local remote-dirfd validation once the guest table stores real
      type information
 2. `[done]` guest-side `lseek()`
-3. `[pending]` guest-side `pread64()`
+3. `[done]` guest-side `pread64()`
 4. `[pending]` guest-side `fcntl()`
 5. `[pending]` guest/server session contract for remote fd lifetime
    - preferred short-term policy: session-bound remote fds with guest-side

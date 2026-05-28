@@ -31,11 +31,10 @@ To evolve `intercept-http` from a fixed response into a server that opens and
 serves files from the host-backed remote filesystem, the next Unikraft-side
 work is:
 
-1. `pread64()`
-2. `writev()`
-3. `fcntl()`
-4. remote descriptor metadata table richer than file-vs-directory only
-5. session/reset-safe remote fd lifetime semantics
+1. `writev()`
+2. `fcntl()`
+3. remote descriptor metadata table richer than file-vs-directory only
+4. session/reset-safe remote fd lifetime semantics
 
 ## Why The Descriptor Model Matters
 

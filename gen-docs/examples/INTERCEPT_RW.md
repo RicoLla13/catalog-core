@@ -23,6 +23,6 @@ absolute-path open.
 
 ## Current Boundary
 
-This sample is the right place for `lseek()` regressions today. Once
-`pread64()` is implemented, offset-stable reads should move into a dedicated
+This sample is the right place for `lseek()` regressions today. Offset-stable
+reads now live in the dedicated
 `intercept-offset` sample rather than expanding this one indefinitely.

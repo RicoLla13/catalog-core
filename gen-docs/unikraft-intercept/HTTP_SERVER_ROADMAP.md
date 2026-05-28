@@ -44,22 +44,17 @@ Current coverage already gives you:
 - `newfstatat()`
 - `fstat()`
 - `lseek()`
+- `pread64()`
 - `read()`
 - `write()`
 - `close()`
 
 Next syscalls to add for practical file serving:
 
-1. `pread64()`
-2. `writev()`
-3. `fcntl()`
+1. `writev()`
+2. `fcntl()`
 
 Why:
-
-- `pread64()`
-  - often better than `lseek() + read()` because it does not mutate shared file
-    offset state
-  - good fit for file-serving code paths
 
 - `writev()`
   - many HTTP implementations send headers and body pieces with vectored writes
@@ -146,7 +141,7 @@ useful order is:
 
 1. `[done]` authoritative file-vs-directory tracking in the guest fd table
 2. `[done]` `lseek()`
-3. `[pending]` `pread64()`
+3. `[done]` `pread64()`
 4. `[pending]` `fcntl()`
 5. `[pending]` guest/server session contract for remote fd lifetime
 6. `[pending]` `writev()`
@@ -185,6 +180,6 @@ For the current `intercept-http` sample:
 
 For a realistic HTTP server serving remote files:
 
-- the next syscall work is `pread64()`, `writev()`, `fcntl()`
+- the next syscall work is `writev()`, `fcntl()`
 - the next architecture work is a real remote descriptor table and explicit
   mixed-backend behavior

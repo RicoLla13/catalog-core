@@ -14,6 +14,9 @@ tree.
 - [INTERCEPT_RW.md](/home/liviu/dev/hearc/tb/unikraft/catalog-core/gen-docs/examples/INTERCEPT_RW.md)
   - sequential remote file I/O and `lseek()`
 
+- [INTERCEPT_OFFSET.md](/home/liviu/dev/hearc/tb/unikraft/catalog-core/gen-docs/examples/INTERCEPT_OFFSET.md)
+  - offset-stable remote reads through `pread64()`
+
 - [INTERCEPT_HTTP.md](/home/liviu/dev/hearc/tb/unikraft/catalog-core/gen-docs/examples/INTERCEPT_HTTP.md)
   - mixed local-socket and remote-filesystem integration story
 
@@ -24,7 +27,8 @@ Each example should validate one contract:
 1. transport/path probes
 2. dirfd policy
 3. sequential file I/O
-4. mixed local/remote integration
+4. offset-stable positioned I/O
+5. mixed local/remote integration
 
 Do not keep growing a focused example into a broad regression bucket. Add a
 new example when the next syscall or policy slice has a distinct contract.
@@ -32,9 +36,6 @@ new example when the next syscall or policy slice has a distinct contract.
 ## Planned Example Ideas
 
 These are the next natural additions once the guest intercept layer grows:
-
-- `intercept-offset`
-  - `pread64()` and offset-stable read behavior
 
 - `intercept-fcntl`
   - remote fd control and validation behavior

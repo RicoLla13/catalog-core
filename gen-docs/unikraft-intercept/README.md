@@ -43,6 +43,7 @@ Current guest intercept coverage:
 - `newfstatat()`
 - `fstat()`
 - `lseek()`
+- `pread64()`
 - `read()`
 - `write()`
 
@@ -50,7 +51,7 @@ Short status summary:
 
 - remote file descriptors are now tracked in an intercept-owned metadata table
   keyed by guest-visible fd
-- `read()`, `write()`, `close()`, and `fstat()` only apply to tracked remote
-  fds
+- `read()`, `pread64()`, `write()`, `close()`, `fstat()`, and `lseek()` only
+  apply to tracked remote fds
 - `newfstatat()` is the current path-based metadata primitive
 - eager boot-connect modes use an ONC RPC probe, not just raw TCP connect
