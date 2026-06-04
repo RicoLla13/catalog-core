@@ -5,8 +5,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define OK_PREFIX "[]"
-#define ERR_PREFIX "[x]"
+#define OK_PREFIX "[ OK  ]"
+#define ERR_PREFIX "[ ERR ]"
 
 int main(int argc, char *argv[])
 {
@@ -32,10 +32,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = access(dir_path, F_OK);
 	if (rc == 0) {
-		dprintf(1, OK_PREFIX " access(\"%s\", F_OK) succeeded: rc=%d errno=%d\n",
+		printf(OK_PREFIX " access(\"%s\", F_OK) succeeded: rc=%d errno=%d\n",
 			dir_path, rc, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " access(\"%s\", F_OK) failed: rc=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " access(\"%s\", F_OK) failed: rc=%d errno=%d (%s)\n",
 			dir_path, rc, errno, strerror(errno));
 		return 1;
 	}
@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	dirfd = openat(AT_FDCWD, dir_path, O_RDONLY | O_DIRECTORY, 0);
 	if (dirfd >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " openat(AT_FDCWD, \"%s\", O_RDONLY|O_DIRECTORY) succeeded: fd=%d errno=%d\n",
 			dir_path, dirfd, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " openat(AT_FDCWD, \"%s\", O_RDONLY|O_DIRECTORY) failed: fd=%d errno=%d (%s)\n",
 			dir_path, dirfd, errno, strerror(errno));
 		return 1;
@@ -61,11 +61,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	fd = openat(AT_FDCWD, dir_path, O_RDONLY, 0);
 	if (fd >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " openat(AT_FDCWD, \"%s\", O_RDONLY) succeeded: fd=%d errno=%d\n",
 			dir_path, fd, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " openat(AT_FDCWD, \"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
 			dir_path, fd, errno, strerror(errno));
 		return 1;
@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = fstatat(fd, relative_file, &st, 0);
 	if (rc == 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " fstatat(%d, \"%s\", 0) via non-O_DIRECTORY dirfd succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
 			fd, relative_file, rc, errno, st.st_mode,
 			(long long) st.st_size, (unsigned long) st.st_nlink);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " fstatat(%d, \"%s\", 0) via non-O_DIRECTORY dirfd failed: rc=%d errno=%d (%s)\n",
 			fd, relative_file, rc, errno, strerror(errno));
 		failed = 1;
@@ -90,10 +90,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = close(fd);
 	if (rc == 0) {
-		dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc, errno);
+		printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc, errno);
 		fd = -1;
 	} else {
-		dprintf(1, ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+		printf(ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
 			errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -102,11 +102,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	fd = openat(dirfd, relative_file, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 	if (fd >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " openat(%d, \"%s\", O_CREAT|O_TRUNC|O_WRONLY, 0644) succeeded: fd=%d errno=%d\n",
 			dirfd, relative_file, fd, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " openat(%d, \"%s\", O_CREAT|O_TRUNC|O_WRONLY, 0644) failed: fd=%d errno=%d (%s)\n",
 			dirfd, relative_file, fd, errno, strerror(errno));
 		failed = 1;
@@ -117,10 +117,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	nwritten = write(fd, first, strlen(first));
 	if (nwritten >= 0) {
-		dprintf(1, OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
+		printf(OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
 			strlen(first), nwritten, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
+		printf(ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
 			strlen(first), nwritten, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -129,10 +129,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	nwritten = write(fd, second, strlen(second));
 	if (nwritten >= 0) {
-		dprintf(1, OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
+		printf(OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
 			strlen(second), nwritten, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
+		printf(ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
 			strlen(second), nwritten, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -141,10 +141,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = close(fd);
 	if (rc == 0) {
-		dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc, errno);
+		printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc, errno);
 		fd = -1;
 	} else {
-		dprintf(1, ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+		printf(ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
 			errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -155,12 +155,12 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = fstatat(dirfd, relative_file, &st, 0);
 	if (rc == 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " fstatat(%d, \"%s\", 0) succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
 			dirfd, relative_file, rc, errno, st.st_mode,
 			(long long) st.st_size, (unsigned long) st.st_nlink);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " fstatat(%d, \"%s\", 0) failed: rc=%d errno=%d (%s)\n",
 			dirfd, relative_file, rc, errno, strerror(errno));
 		failed = 1;
@@ -170,11 +170,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	fd = openat(dirfd, relative_file, O_RDONLY, 0);
 	if (fd >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " openat(%d, \"%s\", O_RDONLY) succeeded: fd=%d errno=%d\n",
 			dirfd, relative_file, fd, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " openat(%d, \"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
 			dirfd, relative_file, fd, errno, strerror(errno));
 		failed = 1;
@@ -189,11 +189,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = fstatat(fd, nested_missing, &st, 0);
 	if (rc == -1 && errno == ENOTDIR) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " fstatat(%d, \"%s\", 0) on regular-file dirfd correctly failed: rc=%d errno=%d (%s)\n",
 			fd, nested_missing, rc, errno, strerror(errno));
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " fstatat(%d, \"%s\", 0) on regular-file dirfd returned unexpected result: rc=%d errno=%d (%s)\n",
 			fd, nested_missing, rc, errno, strerror(errno));
 		failed = 1;
@@ -203,10 +203,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	pos = lseek(fd, 8, SEEK_SET);
 	if (pos >= 0) {
-		dprintf(1, OK_PREFIX " lseek(%d, 8, SEEK_SET) succeeded: off=%lld errno=%d\n",
+		printf(OK_PREFIX " lseek(%d, 8, SEEK_SET) succeeded: off=%lld errno=%d\n",
 			fd, (long long) pos, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " lseek(%d, 8, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
+		printf(ERR_PREFIX " lseek(%d, 8, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
 			fd, (long long) pos, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -216,12 +216,12 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = fstat(fd, &st);
 	if (rc == 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " fstat(%d) succeeded: rc=%d errno=%d mode=%o size=%lld nlink=%lu\n",
 			fd, rc, errno, st.st_mode, (long long) st.st_size,
 			(unsigned long) st.st_nlink);
 	} else {
-		dprintf(1, ERR_PREFIX " fstat(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+		printf(ERR_PREFIX " fstat(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
 			errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -233,11 +233,11 @@ int main(int argc, char *argv[])
 	nread = read(fd, buf, sizeof(buf) - 1);
 	if (nread >= 0) {
 		buf[nread] = '\0';
-		dprintf(1,
+		printf(
 			OK_PREFIX " read(%d, %zu) succeeded: rc=%zd errno=%d data=\"%s\"\n",
 			fd, sizeof(buf) - 1, nread, errno, buf);
 	} else {
-		dprintf(1, ERR_PREFIX " read(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
+		printf(ERR_PREFIX " read(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
 			sizeof(buf) - 1, nread, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -246,10 +246,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	pos = lseek(fd, 0, SEEK_SET);
 	if (pos >= 0) {
-		dprintf(1, OK_PREFIX " lseek(%d, 0, SEEK_SET) succeeded: off=%lld errno=%d\n",
+		printf(OK_PREFIX " lseek(%d, 0, SEEK_SET) succeeded: off=%lld errno=%d\n",
 			fd, (long long) pos, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " lseek(%d, 0, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
+		printf(ERR_PREFIX " lseek(%d, 0, SEEK_SET) failed: off=%lld errno=%d (%s)\n",
 			fd, (long long) pos, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -260,11 +260,11 @@ int main(int argc, char *argv[])
 	nread = read(fd, buf, sizeof(buf) - 1);
 	if (nread >= 0) {
 		buf[nread] = '\0';
-		dprintf(1,
+		printf(
 			OK_PREFIX " read(%d, %zu) after rewind succeeded: rc=%zd errno=%d data=\"%s\"\n",
 			fd, sizeof(buf) - 1, nread, errno, buf);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " read(%d, %zu) after rewind failed: rc=%zd errno=%d (%s)\n",
 			fd, sizeof(buf) - 1, nread, errno, strerror(errno));
 		failed = 1;
@@ -276,10 +276,10 @@ out:
 		errno = 0;
 		rc = close(fd);
 		if (rc == 0) {
-			dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc,
+			printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc,
 				errno);
 		} else {
-			dprintf(1, ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+			printf(ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
 				errno, strerror(errno));
 			failed = 1;
 		}
@@ -289,10 +289,10 @@ out:
 		errno = 0;
 		rc = close(dirfd);
 		if (rc == 0) {
-			dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", dirfd, rc,
+			printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", dirfd, rc,
 				errno);
 		} else {
-			dprintf(1,
+			printf(
 				ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", dirfd, rc,
 				errno, strerror(errno));
 			failed = 1;

@@ -9,8 +9,8 @@
 
 #define LISTEN_PORT 8080
 #define BUFLEN 2048
-#define OK_PREFIX "[]"
-#define ERR_PREFIX "[x]"
+#define OK_PREFIX "[ OK  ]"
+#define ERR_PREFIX "[ ERR ]"
 
 static const char reply[] = "HTTP/1.1 200 OK\r\n"
 			    "Content-Type: text/plain\r\n"

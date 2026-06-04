@@ -6,8 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#define OK_PREFIX "[ok]"
-#define ERR_PREFIX "[x]"
+#define OK_PREFIX "[ OK  ]"
+#define ERR_PREFIX "[ ERR ]"
 
 static const char *const db_path = "/tmp/intercept-sqlite-ro-root/chinook.db";
 
@@ -20,14 +20,14 @@ static int run_query(sqlite3 *db, const char *label, const char *sql)
 
 	rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
 	if (rc != SQLITE_OK) {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " sqlite3_prepare_v2(%s) failed: rc=%d ext=%d msg=%s sql=%s\n",
 			label, rc, sqlite3_extended_errcode(db), sqlite3_errmsg(db), sql);
 		return 1;
 	}
 
 	col_count = sqlite3_column_count(stmt);
-	dprintf(1, OK_PREFIX " sqlite3_prepare_v2(%s) succeeded: columns=%d\n",
+	printf(OK_PREFIX " sqlite3_prepare_v2(%s) succeeded: columns=%d\n",
 		label, col_count);
 
 	for (;;) {
@@ -36,25 +36,25 @@ static int run_query(sqlite3 *db, const char *label, const char *sql)
 			int i;
 
 			row_count++;
-			dprintf(1, OK_PREFIX " %s row %d:", label, row_count);
+			printf(OK_PREFIX " %s row %d:", label, row_count);
 			for (i = 0; i < col_count; i++) {
 				const unsigned char *text = sqlite3_column_text(stmt, i);
 
-				dprintf(1, " %s=%s",
+				printf(" %s=%s",
 					sqlite3_column_name(stmt, i),
 					text ? (const char *) text : "NULL");
 			}
-			dprintf(1, "\n");
+			printf("\n");
 			continue;
 		}
 
 		if (rc == SQLITE_DONE) {
-			dprintf(1, OK_PREFIX " sqlite3_step(%s) completed: rows=%d\n",
+			printf(OK_PREFIX " sqlite3_step(%s) completed: rows=%d\n",
 				label, row_count);
 			break;
 		}
 
-		dprintf(1,
+		printf(
 			ERR_PREFIX " sqlite3_step(%s) failed: rc=%d ext=%d msg=%s\n",
 			label, rc, sqlite3_extended_errcode(db), sqlite3_errmsg(db));
 		(void) sqlite3_finalize(stmt);
@@ -63,13 +63,13 @@ static int run_query(sqlite3 *db, const char *label, const char *sql)
 
 	rc = sqlite3_finalize(stmt);
 	if (rc != SQLITE_OK) {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " sqlite3_finalize(%s) failed: rc=%d ext=%d msg=%s\n",
 			label, rc, sqlite3_extended_errcode(db), sqlite3_errmsg(db));
 		return 1;
 	}
 
-	dprintf(1, OK_PREFIX " sqlite3_finalize(%s) succeeded\n", label);
+	printf(OK_PREFIX " sqlite3_finalize(%s) succeeded\n", label);
 	return 0;
 }
 
@@ -89,70 +89,70 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = access(db_path, R_OK);
 	if (rc != 0) {
-		dprintf(1, ERR_PREFIX " access(\"%s\", R_OK) failed: rc=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " access(\"%s\", R_OK) failed: rc=%d errno=%d (%s)\n",
 			db_path, rc, errno, strerror(errno));
 		return 1;
 	}
-	dprintf(1, OK_PREFIX " access(\"%s\", R_OK) succeeded: rc=%d errno=%d\n",
+	printf(OK_PREFIX " access(\"%s\", R_OK) succeeded: rc=%d errno=%d\n",
 		db_path, rc, errno);
 
 	memset(&st, 0, sizeof(st));
 	errno = 0;
 	rc = stat(db_path, &st);
 	if (rc != 0) {
-		dprintf(1, ERR_PREFIX " stat(\"%s\") failed: rc=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " stat(\"%s\") failed: rc=%d errno=%d (%s)\n",
 			db_path, rc, errno, strerror(errno));
 		return 1;
 	}
-	dprintf(1,
+	printf(
 		OK_PREFIX " stat(\"%s\") succeeded: rc=%d errno=%d mode=%o size=%lld\n",
 		db_path, rc, errno, st.st_mode, (long long) st.st_size);
 
 	errno = 0;
 	fd = open(db_path, O_RDONLY, 0);
 	if (fd < 0) {
-		dprintf(1, ERR_PREFIX " open(\"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " open(\"%s\", O_RDONLY) failed: fd=%d errno=%d (%s)\n",
 			db_path, fd, errno, strerror(errno));
 		return 1;
 	}
-	dprintf(1, OK_PREFIX " open(\"%s\", O_RDONLY) succeeded: fd=%d errno=%d\n",
+	printf(OK_PREFIX " open(\"%s\", O_RDONLY) succeeded: fd=%d errno=%d\n",
 		db_path, fd, errno);
 
 	memset(probe, 0, sizeof(probe));
 	errno = 0;
 	nread = pread(fd, probe, sizeof(probe) - 1, 0);
 	if (nread < 0) {
-		dprintf(1, ERR_PREFIX " pread(%d, %zu, 0) failed: rc=%zd errno=%d (%s)\n",
+		printf(ERR_PREFIX " pread(%d, %zu, 0) failed: rc=%zd errno=%d (%s)\n",
 			fd, sizeof(probe) - 1, nread, errno, strerror(errno));
 		failed = 1;
 		goto out;
 	}
 	probe[nread] = '\0';
-	dprintf(1, OK_PREFIX " pread(%d, %zu, 0) succeeded: rc=%zd errno=%d data=\"%s\"\n",
+	printf(OK_PREFIX " pread(%d, %zu, 0) succeeded: rc=%zd errno=%d data=\"%s\"\n",
 		fd, sizeof(probe) - 1, nread, errno, probe);
 
 	errno = 0;
 	rc = close(fd);
 	if (rc != 0) {
-		dprintf(1, ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n",
 			fd, rc, errno, strerror(errno));
 		failed = 1;
 		goto out;
 	}
-	dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n",
+	printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n",
 		fd, rc, errno);
 	fd = -1;
 
 	rc = sqlite3_open_v2(db_path, &db, SQLITE_OPEN_READONLY, NULL);
 	if (rc != SQLITE_OK) {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " sqlite3_open_v2(\"%s\", SQLITE_OPEN_READONLY) failed: rc=%d ext=%d msg=%s\n",
 			db_path, rc, db ? sqlite3_extended_errcode(db) : rc,
 			db ? sqlite3_errmsg(db) : "no db handle");
 		failed = 1;
 		goto out;
 	}
-	dprintf(1, OK_PREFIX " sqlite3_open_v2(\"%s\") succeeded\n", db_path);
+	printf(OK_PREFIX " sqlite3_open_v2(\"%s\") succeeded\n", db_path);
 
 	if (run_query(db, "schema",
 		      "SELECT name FROM sqlite_master "
@@ -172,12 +172,12 @@ out:
 	if (db) {
 		rc = sqlite3_close(db);
 		if (rc != SQLITE_OK) {
-			dprintf(1,
+			printf(
 				ERR_PREFIX " sqlite3_close() failed: rc=%d ext=%d msg=%s\n",
 				rc, sqlite3_extended_errcode(db), sqlite3_errmsg(db));
 			failed = 1;
 		} else {
-			dprintf(1, OK_PREFIX " sqlite3_close() succeeded\n");
+			printf(OK_PREFIX " sqlite3_close() succeeded\n");
 		}
 	}
 
@@ -185,7 +185,7 @@ out:
 		errno = 0;
 		rc = close(fd);
 		if (rc != 0) {
-			dprintf(1, ERR_PREFIX " close(%d) failed during cleanup: rc=%d errno=%d (%s)\n",
+			printf(ERR_PREFIX " close(%d) failed during cleanup: rc=%d errno=%d (%s)\n",
 				fd, rc, errno, strerror(errno));
 			failed = 1;
 		}

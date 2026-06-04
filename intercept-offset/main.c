@@ -4,8 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define OK_PREFIX "[]"
-#define ERR_PREFIX "[x]"
+#define OK_PREFIX "[ OK  ]"
+#define ERR_PREFIX "[ ERR ]"
 
 int main(int argc, char *argv[])
 {
@@ -27,10 +27,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = access(dir_path, F_OK);
 	if (rc == 0) {
-		dprintf(1, OK_PREFIX " access(\"%s\", F_OK) succeeded: rc=%d errno=%d\n",
+		printf(OK_PREFIX " access(\"%s\", F_OK) succeeded: rc=%d errno=%d\n",
 			dir_path, rc, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " access(\"%s\", F_OK) failed: rc=%d errno=%d (%s)\n",
+		printf(ERR_PREFIX " access(\"%s\", F_OK) failed: rc=%d errno=%d (%s)\n",
 			dir_path, rc, errno, strerror(errno));
 		return 1;
 	}
@@ -38,11 +38,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	fd = openat(AT_FDCWD, file_path, O_CREAT | O_TRUNC | O_RDWR, 0644);
 	if (fd >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " openat(AT_FDCWD, \"%s\", O_CREAT|O_TRUNC|O_RDWR, 0644) succeeded: fd=%d errno=%d\n",
 			file_path, fd, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " openat(AT_FDCWD, \"%s\", O_CREAT|O_TRUNC|O_RDWR, 0644) failed: fd=%d errno=%d (%s)\n",
 			file_path, fd, errno, strerror(errno));
 		return 1;
@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
 	errno = 0;
 	nwritten = write(fd, payload, strlen(payload));
 	if (nwritten >= 0) {
-		dprintf(1, OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
+		printf(OK_PREFIX " write(%d, %zu) succeeded: rc=%zd errno=%d\n", fd,
 			strlen(payload), nwritten, errno);
 	} else {
-		dprintf(1, ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
+		printf(ERR_PREFIX " write(%d, %zu) failed: rc=%zd errno=%d (%s)\n", fd,
 			strlen(payload), nwritten, errno, strerror(errno));
 		failed = 1;
 		goto out;
@@ -63,11 +63,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	pos_before = lseek(fd, 0, SEEK_CUR);
 	if (pos_before >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " lseek(%d, 0, SEEK_CUR) before pread succeeded: off=%lld errno=%d\n",
 			fd, (long long)pos_before, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " lseek(%d, 0, SEEK_CUR) before pread failed: off=%lld errno=%d (%s)\n",
 			fd, (long long)pos_before, errno, strerror(errno));
 		failed = 1;
@@ -79,11 +79,11 @@ int main(int argc, char *argv[])
 	nread = pread(fd, buf, 6, 0);
 	if (nread >= 0) {
 		buf[nread] = '\0';
-		dprintf(1,
+		printf(
 			OK_PREFIX " pread(%d, 6, 0) succeeded: rc=%zd errno=%d data=\"%s\"\n",
 			fd, nread, errno, buf);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " pread(%d, 6, 0) failed: rc=%zd errno=%d (%s)\n",
 			fd, nread, errno, strerror(errno));
 		failed = 1;
@@ -95,11 +95,11 @@ int main(int argc, char *argv[])
 	nread = pread(fd, buf, 6, 7);
 	if (nread >= 0) {
 		buf[nread] = '\0';
-		dprintf(1,
+		printf(
 			OK_PREFIX " pread(%d, 6, 7) succeeded: rc=%zd errno=%d data=\"%s\"\n",
 			fd, nread, errno, buf);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " pread(%d, 6, 7) failed: rc=%zd errno=%d (%s)\n",
 			fd, nread, errno, strerror(errno));
 		failed = 1;
@@ -109,11 +109,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	pos_after = lseek(fd, 0, SEEK_CUR);
 	if (pos_after >= 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " lseek(%d, 0, SEEK_CUR) after pread succeeded: off=%lld errno=%d\n",
 			fd, (long long)pos_after, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " lseek(%d, 0, SEEK_CUR) after pread failed: off=%lld errno=%d (%s)\n",
 			fd, (long long)pos_after, errno, strerror(errno));
 		failed = 1;
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (pos_after != pos_before) {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " pread unexpectedly changed the current offset: before=%lld after=%lld\n",
 			(long long)pos_before, (long long)pos_after);
 		failed = 1;
@@ -132,10 +132,10 @@ out:
 		errno = 0;
 		rc = close(fd);
 		if (rc == 0) {
-			dprintf(1, OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc,
+			printf(OK_PREFIX " close(%d) succeeded: rc=%d errno=%d\n", fd, rc,
 				errno);
 		} else {
-			dprintf(1, ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
+			printf(ERR_PREFIX " close(%d) failed: rc=%d errno=%d (%s)\n", fd, rc,
 				errno, strerror(errno));
 			failed = 1;
 		}

@@ -72,10 +72,11 @@ For running applications with QEMU bridged networking, use the command below:
 
 ```console
 test -d /etc/qemu || sudo mkdir /etc/qemu
-echo "allow all" | sudo tee /etc/qemu/bridge.conf
+echo "allow virbr0" | sudo tee /etc/qemu/bridge.conf
 ```
 
-It enables QEMU bridged networking.
+It enables QEMU bridged networking for the `virbr0` bridge used by the
+intercept examples without opening the helper to every bridge on the host.
 
 ### Docker
 

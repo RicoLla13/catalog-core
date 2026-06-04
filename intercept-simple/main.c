@@ -3,8 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#define OK_PREFIX "[]"
-#define ERR_PREFIX "[x]"
+#define OK_PREFIX "[ OK  ]"
+#define ERR_PREFIX "[ ERR ]"
 
 int main(int argc, char *argv[])
 {
@@ -20,11 +20,11 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = access(existing_path, F_OK);
 	if (rc == 0) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " access(\"%s\", F_OK) succeeded: rc=%d errno=%d\n",
 			existing_path, rc, errno);
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " access(\"%s\", F_OK) failed: rc=%d errno=%d (%s)\n",
 			existing_path, rc, errno, strerror(errno));
 		failed = 1;
@@ -34,16 +34,16 @@ int main(int argc, char *argv[])
 	errno = 0;
 	rc = access(missing_path, F_OK);
 	if (rc < 0 && errno == ENOENT) {
-		dprintf(1,
+		printf(
 			OK_PREFIX " access(\"%s\", F_OK) missing as expected: rc=%d errno=%d (%s)\n",
 			missing_path, rc, errno, strerror(errno));
 	} else if (rc == 0) {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " access(\"%s\", F_OK) unexpectedly succeeded: rc=%d errno=%d\n",
 			missing_path, rc, errno);
 		failed = 1;
 	} else {
-		dprintf(1,
+		printf(
 			ERR_PREFIX " access(\"%s\", F_OK) failed with unexpected errno: rc=%d errno=%d (%s)\n",
 			missing_path, rc, errno, strerror(errno));
 		failed = 1;
