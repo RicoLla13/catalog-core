@@ -1,0 +1,9 @@
+config APPINTERCEPTSQLITERO
+	bool "Configure intercept-sqlite-ro"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBMUSL
+	select LIBSQLITE
+	select LIBUKNETDEV_EINFO_LIBPARAM

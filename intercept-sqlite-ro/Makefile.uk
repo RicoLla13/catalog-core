@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptsqlitero))
+
+APPINTERCEPTSQLITERO_SRCS-y += $(APPINTERCEPTSQLITERO_BASE)/main.c

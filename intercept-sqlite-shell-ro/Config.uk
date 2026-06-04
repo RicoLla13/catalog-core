@@ -1,0 +1,11 @@
+config APPINTERCEPTSQLITESHELLRO
+	bool "Configure intercept-sqlite-shell-ro"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBMUSL
+	select LIBSQLITE
+	select LIBSQLITE_MAIN_FUNCTION
+	select LIBPOSIX_ENVIRON_LIBPARAM
+	select LIBUKNETDEV_EINFO_LIBPARAM
