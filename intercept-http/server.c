@@ -31,13 +31,13 @@ int main(int argc __attribute__((unused)),
 
 	/* Small intercept preflight before the sample switches to local guest sockets. */
 	errno = 0;
-	rc = access("/tmp", F_OK);
+	rc = access("/tmp/intercept-http-root/preflight-ok.txt", F_OK);
 	if (rc == 0) {
-		printf(OK_PREFIX " intercept preflight: access(\"/tmp\", F_OK) rc=%d errno=%d\n",
+		printf(OK_PREFIX " intercept preflight: access(\"/tmp/intercept-http-root/preflight-ok.txt\", F_OK) rc=%d errno=%d\n",
 		       rc, errno);
 	} else {
 		fprintf(stderr,
-			ERR_PREFIX " intercept preflight failed: access(\"/tmp\", F_OK) rc=%d errno=%d (%s)\n",
+			ERR_PREFIX " intercept preflight failed: access(\"/tmp/intercept-http-root/preflight-ok.txt\", F_OK) rc=%d errno=%d (%s)\n",
 			rc, errno, strerror(errno));
 	}
 

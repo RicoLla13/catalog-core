@@ -11,8 +11,8 @@
 int main(int argc, char *argv[])
 {
 	char buf[160];
-	const char *dir_path = "/tmp";
-	const char *file_path = "/tmp/intercept-rw.txt";
+	const char *dir_path = "/tmp/intercept-rw-root";
+	const char *file_path = "/tmp/intercept-rw-root/intercept-rw.txt";
 	const char *first = "written from intercept-rw";
 	const char *second = " using sequential IO";
 	int fd = -1;

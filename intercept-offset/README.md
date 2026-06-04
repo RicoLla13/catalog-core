@@ -1,24 +1,27 @@
 # intercept-offset
 
-`intercept-offset` is the offset-stability sample for tracked remote file
-descriptors. It exists to validate `pread64()` separately from the sequential
-`read()` and `lseek()` flow in `intercept-rw`.
+`intercept-offset` is the positioned-read sample.
 
-## Run Order
+## Purpose
 
-1. Prepare the sample workdir:
+It exists to validate one specific contract:
 
-   ```sh
-   ./setup.sh
-   ```
+- `pread64()` must not mutate the fd's current offset
 
-2. Configure the sample for `x86_64` and `QEMU/KVM`:
+The sample seeds one remote file through normal write flow, then compares
+`lseek(..., SEEK_CUR)` before and after `pread()`.
 
-   ```sh
-   make menuconfig
-   ```
+## Host Fixture
 
-3. Start the host syscall server in a separate shell:
+`run.sh` prepares:
+
+- `/tmp/intercept-offset-root/`
+
+The guest creates `intercept-offset.txt` during the run.
+
+## Run
+
+1. Start the host syscall server:
 
    ```sh
    cd ../repos/syscall-server
@@ -26,18 +29,21 @@ descriptors. It exists to validate `pread64()` separately from the sequential
    ./build/syscall_server
    ```
 
-4. Launch the guest:
+2. Configure the guest once:
+
+   ```sh
+   ./setup.sh
+   make menuconfig
+   ```
+
+3. Launch the sample:
 
    ```sh
    ./run.sh
    ```
 
-## Contract
+## Expected Checks
 
-This sample intentionally covers:
-
-1. create/truncate and write on one tracked remote file fd
-2. baseline `SEEK_CUR` position capture
-3. `pread64()` from multiple offsets
-4. `SEEK_CUR` position check after `pread64()` to prove the current offset did
-   not move
+- writes succeed on the tracked remote fd
+- `pread()` from multiple offsets succeeds
+- the current offset reported by `lseek(..., SEEK_CUR)` is unchanged after `pread()`

@@ -1,24 +1,26 @@
 # intercept-dirfd
 
-`intercept-dirfd` is the remote dirfd policy sample. It exists to test
-descriptor classification and relative path behavior without mixing in broader
-read/write coverage.
+`intercept-dirfd` is the focused dirfd-policy sample.
 
-## Run Order
+## Purpose
 
-1. Prepare the sample workdir:
+It isolates:
 
-   ```sh
-   ./setup.sh
-   ```
+- remote directory classification after `openat()`
+- relative path resolution through tracked remote dirfds
+- local `ENOTDIR` rejection when a tracked remote regular file is reused as a dirfd
 
-2. Configure the sample for `x86_64` and `QEMU/KVM`:
+## Host Fixture
 
-   ```sh
-   make menuconfig
-   ```
+`run.sh` prepares:
 
-3. Start the host syscall server in a separate shell:
+- `/tmp/intercept-dirfd-root/`
+
+The sample itself creates `intercept-dirfd.txt` inside that directory.
+
+## Run
+
+1. Start the host syscall server:
 
    ```sh
    cd ../repos/syscall-server
@@ -26,21 +28,21 @@ read/write coverage.
    ./build/syscall_server
    ```
 
-4. Launch the guest:
+2. Configure the guest once:
+
+   ```sh
+   ./setup.sh
+   make menuconfig
+   ```
+
+3. Launch the sample:
 
    ```sh
    ./run.sh
    ```
 
-## Contract
+## Expected Checks
 
-This sample intentionally covers:
-
-1. strict directory open with `O_DIRECTORY`
-2. directory open without `O_DIRECTORY`
-3. relative `openat()` through the classified directory fd
-4. relative `fstatat()` through both directory-fd forms
-5. local `ENOTDIR` rejection when a tracked remote regular file is misused as a dirfd
-
-If this sample fails while `intercept-probe` passes, the likely problem is in
-tracked remote fd classification or dirfd policy rather than transport alone.
+- both `openat(..., O_DIRECTORY)` and `openat(..., O_RDONLY)` on the seeded root behave as remote directories
+- relative `openat()` and `fstatat()` through tracked dirfds succeed
+- `fstatat(filefd, "child", ...)` fails with `ENOTDIR`

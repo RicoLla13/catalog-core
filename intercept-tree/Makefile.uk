@@ -1,0 +1,3 @@
+$(eval $(call addlib,appintercepttree))
+
+APPINTERCEPTTREE_SRCS-y += $(APPINTERCEPTTREE_BASE)/main.c

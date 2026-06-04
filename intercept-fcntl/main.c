@@ -9,8 +9,8 @@
 
 int main(int argc, char *argv[])
 {
-	const char *dir_path = "/tmp";
-	const char *file_path = "/tmp/intercept-fcntl.txt";
+	const char *dir_path = "/tmp/intercept-fcntl-root";
+	const char *file_path = "/tmp/intercept-fcntl-root/intercept-fcntl.txt";
 	int fd = -1;
 	int dupfd = -1;
 	int rc;

@@ -1,0 +1,7 @@
+config APPINTERCEPTTREE
+	bool "Configure intercept-tree"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV_EINFO_LIBPARAM

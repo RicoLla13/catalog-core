@@ -1,5 +1,5 @@
-config APPINTERCEPTPROBE
-	bool "Configure intercept-probe"
+config APPINTERCEPTPATHMETA
+	bool "Configure intercept-pathmeta"
 	default y
 
 	select LIBINTERCEPT

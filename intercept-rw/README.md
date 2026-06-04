@@ -1,24 +1,28 @@
 # intercept-rw
 
-`intercept-rw` is the sequential remote file I/O sample. It keeps the focus on
-one tracked remote file descriptor and the syscalls that currently operate on
-that fd: `openat()`, `write()`, `lseek()`, `fstat()`, `read()`, and `close()`.
+`intercept-rw` is the single-fd sequential I/O sample.
 
-## Run Order
+## Purpose
 
-1. Prepare the sample workdir:
+It keeps the regression target small:
 
-   ```sh
-   ./setup.sh
-   ```
+- absolute-path open
+- repeated writes on one tracked remote file fd
+- `lseek()` offset mutations
+- `fstat()` on the tracked remote fd
+- reads after seek and rewind
 
-2. Configure the sample for `x86_64` and `QEMU/KVM`:
+## Host Fixture
 
-   ```sh
-   make menuconfig
-   ```
+`run.sh` prepares:
 
-3. Start the host syscall server in a separate shell:
+- `/tmp/intercept-rw-root/`
+
+The guest creates `intercept-rw.txt` during the run.
+
+## Run
+
+1. Start the host syscall server:
 
    ```sh
    cd ../repos/syscall-server
@@ -26,22 +30,20 @@ that fd: `openat()`, `write()`, `lseek()`, `fstat()`, `read()`, and `close()`.
    ./build/syscall_server
    ```
 
-4. Launch the guest:
+2. Configure the guest once:
+
+   ```sh
+   ./setup.sh
+   make menuconfig
+   ```
+
+3. Launch the sample:
 
    ```sh
    ./run.sh
    ```
 
-## Contract
+## Expected Checks
 
-This sample intentionally covers:
-
-1. create/truncate through absolute-path `openat()`
-2. repeated `write()` calls on one tracked remote file fd
-3. offset checks through `lseek()`
-4. `fstat()` on the tracked remote fd
-5. reads after seek and after rewind
-
-If this sample fails while `intercept-probe` and `intercept-dirfd` pass, the
-likely problem is in tracked remote file I/O rather than dirfd classification
-or transport setup.
+- one tracked remote file fd carries the full write/seek/read sequence
+- `fstat()` reports the expected size after the writes

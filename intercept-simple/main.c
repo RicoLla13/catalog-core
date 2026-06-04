@@ -8,8 +8,8 @@
 
 int main(int argc, char *argv[])
 {
-	const char *existing_path = "/tmp";
-	const char *missing_path = "/tmp/intercept-simple-missing";
+	const char *existing_path = "/tmp/intercept-simple-root/existing.txt";
+	const char *missing_path = "/tmp/intercept-simple-root/missing.txt";
 	int rc;
 	int failed = 0;
 

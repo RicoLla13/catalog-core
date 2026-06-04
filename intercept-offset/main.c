@@ -10,8 +10,8 @@
 int main(int argc, char *argv[])
 {
 	char buf[160];
-	const char *dir_path = "/tmp";
-	const char *file_path = "/tmp/intercept-offset.txt";
+	const char *dir_path = "/tmp/intercept-offset-root";
+	const char *file_path = "/tmp/intercept-offset-root/intercept-offset.txt";
 	const char *payload = "offset stable remote pread payload";
 	int fd = -1;
 	int rc;

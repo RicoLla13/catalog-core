@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptpathmeta))
+
+APPINTERCEPTPATHMETA_SRCS-y += $(APPINTERCEPTPATHMETA_BASE)/main.c

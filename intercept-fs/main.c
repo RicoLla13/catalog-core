@@ -11,7 +11,7 @@
 int main(int argc, char *argv[])
 {
 	char buf[160];
-	const char *dir_path = "/tmp";
+	const char *dir_path = "/tmp/intercept-fs-root";
 	const char *relative_file = "intercept-fs.txt";
 	const char *nested_missing = "intercept-fs-missing-child";
 	const char *first = "written from intercept-fs";

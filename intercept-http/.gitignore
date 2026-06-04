@@ -1,1 +1,4 @@
 /workdir/
+/.config
+/.config.old
+/*.log

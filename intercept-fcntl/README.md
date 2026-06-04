@@ -1,23 +1,28 @@
 # intercept-fcntl
 
-`intercept-fcntl` is the focused remote fd control sample. It validates the
-guest-side `fcntl()` intercept path on one tracked remote file descriptor.
+`intercept-fcntl` is the focused fd-control sample.
 
-## Run Order
+## Purpose
 
-1. Prepare the sample workdir:
+It validates the currently supported `fcntl()` subset on one tracked remote
+file descriptor:
 
-   ```sh
-   ./setup.sh
-   ```
+- `F_GETFD` / `F_SETFD`
+- `F_GETFL` / `F_SETFL`
+- `F_DUPFD`
+- `F_SETLK` unlock flow
 
-2. Configure the sample for `x86_64` and `QEMU/KVM`:
+## Host Fixture
 
-   ```sh
-   make menuconfig
-   ```
+`run.sh` prepares:
 
-3. Start the host syscall server in a separate shell:
+- `/tmp/intercept-fcntl-root/`
+
+The guest creates `intercept-fcntl.txt` during the run.
+
+## Run
+
+1. Start the host syscall server:
 
    ```sh
    cd ../repos/syscall-server
@@ -25,20 +30,22 @@ guest-side `fcntl()` intercept path on one tracked remote file descriptor.
    ./build/syscall_server
    ```
 
-4. Launch the guest:
+2. Configure the guest once:
+
+   ```sh
+   ./setup.sh
+   make menuconfig
+   ```
+
+3. Launch the sample:
 
    ```sh
    ./run.sh
    ```
 
-## Contract
+## Expected Checks
 
-This sample intentionally covers:
-
-1. descriptor-local `F_GETFD` / `F_SETFD`
-2. remote `F_GETFL` / `F_SETFL`
-3. remote `F_DUPFD`
-4. remote `F_SETLK` and unlock through `F_SETLK`
-
-If this sample fails while `intercept-rw` passes, the likely problem is in
-remote fd-control behavior rather than in basic sequential I/O.
+- descriptor-local flags behave correctly on the guest-visible fd
+- file-status flags survive `F_SETFL`
+- `F_DUPFD` allocates a second guest-visible remote fd
+- lock and unlock requests round-trip through the server

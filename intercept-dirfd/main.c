@@ -10,7 +10,7 @@
 
 int main(int argc, char *argv[])
 {
-	const char *dir_path = "/tmp";
+	const char *dir_path = "/tmp/intercept-dirfd-root";
 	const char *relative_file = "intercept-dirfd.txt";
 	const char *nested_missing = "intercept-dirfd-missing-child";
 	int strict_dirfd = -1;

@@ -3,40 +3,16 @@
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)
 
 cd "$SCRIPT_DIR"
-./setup.sh
+. "$REPO_ROOT/scripts/intercept-example-common.sh"
 
-if [ ! -f .config ]; then
-	echo "No .config found. Run 'make menuconfig' first and select x86_64 with QEMU/KVM." >&2
-	exit 1
-fi
+seed_intercept_fs()
+{
+	rm -rf /tmp/intercept-fs-root
+	mkdir -p /tmp/intercept-fs-root
+	printf '%s\n' "precreated by intercept-fs/run.sh" >/tmp/intercept-fs-root/intercept-fs.txt
+}
 
-make -j"$(nproc)" CFLAGS="-std=gnu17" EXTRA_CFLAGS="-std=gnu17"
-
-# Seed the host-side fixture expected by the initial relative fstatat() probe.
-printf '%s\n' "precreated by intercept-fs/run.sh" >/tmp/intercept-fs.txt
-
-if [ ! -f /etc/qemu/bridge.conf ] || ! grep -Eq '^[[:space:]]*allow[[:space:]]+all([[:space:]]|$)' /etc/qemu/bridge.conf; then
-	echo "/etc/qemu/bridge.conf must exist and allow bridge networking (for example: 'allow all')." >&2
-	exit 1
-fi
-
-if ! ip link show virbr0 >/dev/null 2>&1; then
-    sudo ip link add dev virbr0 type bridge
-fi
-
-if ! ip addr show dev virbr0 | grep -q '172\.44\.0\.1/24'; then
-    sudo ip address add 172.44.0.1/24 dev virbr0
-fi
-
-sudo ip link set dev virbr0 up
-
-sudo qemu-system-x86_64 \
-    -nographic \
-    -m 8 \
-    -cpu max \
-    -netdev bridge,id=n0,br=virbr0 \
-    -device virtio-net-pci,netdev=n0 \
-    -append "intercept-fs_qemu-x86_64 netdev.ip=172.44.0.2/24:172.44.0.1::: -- " \
-    -kernel workdir/build/intercept-fs_qemu-x86_64
+intercept_example_run "intercept-fs_qemu-x86_64" seed_intercept_fs
