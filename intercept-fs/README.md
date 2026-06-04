@@ -53,11 +53,16 @@ after a clean without extra manual steps.
 
 1. runs `./setup.sh`
 2. builds the guest image
-3. ensures `/etc/qemu/bridge.conf` allows bridge networking
-4. reuses or creates `virbr0`
-5. ensures `virbr0` carries `172.44.0.1/24`
-6. brings the bridge up
-7. starts `qemu-system-x86_64` with the guest image and a bridged virtio NIC
+3. seeds the host fixture file `/tmp/intercept-fs.txt` for the initial
+   relative `fstatat()` probe
+4. checks that `/etc/qemu/bridge.conf` already allows bridge networking
+5. reuses or creates `virbr0`
+6. ensures `virbr0` carries `172.44.0.1/24`
+7. brings the bridge up
+8. starts `qemu-system-x86_64` with the guest image and a bridged virtio NIC
+
+`run.sh` does not modify `/etc/qemu/bridge.conf`; it only verifies the host
+bridge prerequisite before launching QEMU.
 
 The launched image is `workdir/build/intercept-fs_qemu-x86_64`.
 
@@ -81,15 +86,23 @@ The sample currently exercises:
 
 1. `access("/tmp", F_OK)`
 2. `openat(AT_FDCWD, "/tmp", O_RDONLY | O_DIRECTORY, 0)`
-3. `openat(dirfd, "intercept-fs.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
-4. two `write()` calls on the remote file
-5. `close(fd)`
-6. `fstatat(dirfd, "intercept-fs.txt", &st, 0)`
-7. `openat(dirfd, "intercept-fs.txt", O_RDONLY, 0)`
-8. `fstat(fd, &st)`
-9. `read(fd, ...)`
-10. `close(fd)`
-11. `close(dirfd)`
+3. `openat(AT_FDCWD, "/tmp", O_RDONLY, 0)`
+4. `fstatat(non_o_directory_dirfd, "intercept-fs.txt", &st, 0)` on a
+   host-seeded file
+5. `close(non_o_directory_dirfd)`
+6. `openat(dirfd, "intercept-fs.txt", O_CREAT | O_TRUNC | O_WRONLY, 0644)`
+7. two `write()` calls on the remote file
+8. `close(fd)`
+9. `fstatat(dirfd, "intercept-fs.txt", &st, 0)`
+10. `openat(dirfd, "intercept-fs.txt", O_RDONLY, 0)`
+11. `fstatat(filefd, "intercept-fs-missing-child", &st, 0)` -> `ENOTDIR`
+12. `lseek(fd, 8, SEEK_SET)`
+13. `fstat(fd, &st)`
+14. `read(fd, ...)`
+15. `lseek(fd, 0, SEEK_SET)`
+16. `read(fd, ...)`
+17. `close(fd)`
+18. `close(dirfd)`
 
 This gives you one path-based probe, one tracked remote directory fd, one
 relative `openat()` flow, and both path-based and fd-based metadata checks.
@@ -101,13 +114,20 @@ The exact remote fd values vary, but a successful run should look like:
 ```text
 access("/tmp", F_OK) succeeded: rc=0 errno=0
 openat(AT_FDCWD, "/tmp", O_RDONLY|O_DIRECTORY) succeeded: fd=<remote-dirfd> errno=0
+openat(AT_FDCWD, "/tmp", O_RDONLY) succeeded: fd=<remote-dirfd> errno=0
+fstatat(<remote-dirfd>, "intercept-fs.txt", 0) via non-O_DIRECTORY dirfd succeeded: rc=0 errno=0 mode=<mode> size=<seed-size> nlink=<nlink>
+close(<remote-dirfd>) succeeded: rc=0 errno=0
 openat(<remote-dirfd>, "intercept-fs.txt", O_CREAT|O_TRUNC|O_WRONLY, 0644) succeeded: fd=<remote-fd> errno=0
 write(<remote-fd>, <n>) succeeded: rc=<n> errno=0
 write(<remote-fd>, <n>) succeeded: rc=<n> errno=0
 close(<remote-fd>) succeeded: rc=0 errno=0
 fstatat(<remote-dirfd>, "intercept-fs.txt", 0) succeeded: rc=0 errno=0 mode=<mode> size=<nbytes> nlink=<nlink>
 openat(<remote-dirfd>, "intercept-fs.txt", O_RDONLY) succeeded: fd=<remote-fd> errno=0
+fstatat(<remote-fd>, "intercept-fs-missing-child", 0) on regular-file dirfd correctly failed: rc=-1 errno=20 (Not a directory)
+lseek(<remote-fd>, 8, SEEK_SET) succeeded: off=8 errno=0
 fstat(<remote-fd>) succeeded: rc=0 errno=0 mode=<mode> size=<nbytes> nlink=<nlink>
+read(<remote-fd>, 159) succeeded: rc=<nbytes> errno=0 data=" from intercept-fs using relative openat"
+lseek(<remote-fd>, 0, SEEK_SET) succeeded: off=0 errno=0
 read(<remote-fd>, 159) succeeded: rc=<nbytes> errno=0 data="written from intercept-fs using relative openat"
 close(<remote-fd>) succeeded: rc=0 errno=0
 close(<remote-dirfd>) succeeded: rc=0 errno=0

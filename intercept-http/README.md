@@ -59,11 +59,14 @@ guest demonstrates both paths:
 
 1. runs `./setup.sh`
 2. builds `workdir/build/intercept-http_qemu-x86_64`
-3. prepares `/etc/qemu/bridge.conf`
+3. checks that `/etc/qemu/bridge.conf` already allows bridge networking
 4. creates or reuses `virbr0`
 5. ensures the host bridge address is `172.44.0.1/24`
 6. launches QEMU with a bridged virtio NIC
 7. passes `netdev.ip=172.44.0.2/24:172.44.0.1:::` to the guest
+
+`run.sh` does not modify `/etc/qemu/bridge.conf`; it fails early if the host
+bridge prerequisite is missing.
 
 The script is intentionally limited to `x86_64` on QEMU.
 

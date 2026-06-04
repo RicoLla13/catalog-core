@@ -14,8 +14,10 @@ fi
 
 make -j"$(nproc)" CFLAGS="-std=gnu17" EXTRA_CFLAGS="-std=gnu17"
 
-sudo mkdir -p /etc/qemu
-printf '%s\n' "allow all" | sudo tee /etc/qemu/bridge.conf >/dev/null
+if [ ! -f /etc/qemu/bridge.conf ] || ! grep -Eq '^[[:space:]]*allow[[:space:]]+all([[:space:]]|$)' /etc/qemu/bridge.conf; then
+	echo "/etc/qemu/bridge.conf must exist and allow bridge networking (for example: 'allow all')." >&2
+	exit 1
+fi
 
 if ! ip link show virbr0 >/dev/null 2>&1; then
     sudo ip link add dev virbr0 type bridge

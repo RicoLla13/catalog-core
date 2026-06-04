@@ -57,11 +57,14 @@ runs stay safe after cleaning the workdir.
 
 1. runs `./setup.sh`
 2. builds the guest with `make -j"$(nproc)" CFLAGS="-std=gnu17"`
-3. ensures `/etc/qemu/bridge.conf` contains `allow all`
+3. checks that `/etc/qemu/bridge.conf` already allows bridge networking
 4. creates `virbr0` if it is missing
 5. assigns `172.44.0.1/24` to `virbr0` if that address is missing
 6. brings `virbr0` up
 7. starts `qemu-system-x86_64` with a bridged virtio NIC and the guest image
+
+`run.sh` does not rewrite `/etc/qemu/bridge.conf`; it expects that host
+prerequisite to be configured already.
 
 The script only supports `x86_64` on QEMU.
 
@@ -88,6 +91,6 @@ The guest should show one successful host-path probe and one missing-path
 probe:
 
 ```text
-access("/tmp", F_OK) succeeded: rc=0 errno=0
-access("/tmp/intercept-simple-missing", F_OK) missing as expected: rc=-1 errno=2 (No such file or directory)
+[] access("/tmp", F_OK) succeeded: rc=0 errno=0
+[] access("/tmp/intercept-simple-missing", F_OK) missing as expected: rc=-1 errno=2 (No such file or directory)
 ```
