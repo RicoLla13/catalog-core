@@ -19,7 +19,7 @@ seed_intercept_sqlite_shell_ro()
 
 intercept_sqlite_shell_ro_launch_qemu()
 {
-	sudo qemu-system-x86_64 \
+	qemu-system-x86_64 \
 		-nographic \
 		-m 8 \
 		-cpu max \

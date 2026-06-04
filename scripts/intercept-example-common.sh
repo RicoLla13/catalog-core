@@ -77,7 +77,7 @@ intercept_example_launch_qemu()
 {
 	image_name="$1"
 
-	sudo qemu-system-x86_64 \
+	qemu-system-x86_64 \
 		-nographic \
 		-m 8 \
 		-cpu max \
