@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptbenchmicro))
+
+APPINTERCEPTBENCHMICRO_SRCS-y += $(APPINTERCEPTBENCHMICRO_BASE)/main.c

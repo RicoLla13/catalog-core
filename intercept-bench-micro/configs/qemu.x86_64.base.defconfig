@@ -1,0 +1,4 @@
+CONFIG_PLAT_KVM=y
+# CONFIG_LIBUKMMAP is not set
+CONFIG_ARCH_X86_64=y
+CONFIG_UK_NAME="intercept-bench-micro"

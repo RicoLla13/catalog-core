@@ -1,0 +1,8 @@
+/workdir/
+/.config
+/.config.old
+/9pfs-rootfs/
+/rootfs/
+/results/
+/initrd.cpio
+/*.log

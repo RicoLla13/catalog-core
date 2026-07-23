@@ -1,0 +1,9 @@
+config APPINTERCEPTBENCHMICRO
+	bool "Configure intercept-bench-micro"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV
+	select LIBUKNETDEV_EINFO_LIBPARAM
+	select LIBMUSL
