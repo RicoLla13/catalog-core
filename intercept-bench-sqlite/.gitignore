@@ -1,0 +1,6 @@
+/workdir/
+/.config
+/.config.old
+/9pfs-rootfs/
+/results/
+/*.log

@@ -15,3 +15,4 @@ if [ "${1:-}" = clean ]; then
 fi
 
 intercept_example_setup_workdir
+intercept_example_check_exists_and_create_symlink "libs/sqlite"

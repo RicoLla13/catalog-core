@@ -1,0 +1,4 @@
+$(eval $(call addlib,appinterceptbenchtree))
+
+APPINTERCEPTBENCHTREE_SRCS-y += $(APPINTERCEPTBENCHTREE_BASE)/main.c
+

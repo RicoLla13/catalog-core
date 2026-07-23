@@ -1,0 +1,10 @@
+config APPINTERCEPTBENCHTREE
+	bool "Configure intercept-bench-tree"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBUKNETDEV
+	select LIBUKNETDEV_EINFO_LIBPARAM
+	select LIBMUSL
+

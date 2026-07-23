@@ -39,6 +39,23 @@ intercept_example_setup_workdir()
 	intercept_example_check_exists_and_create_symlink "libs/lwip"
 }
 
+intercept_example_clean()
+{
+	rm -rf workdir
+	rm -f .config .config.old
+}
+
+intercept_example_apply_config()
+{
+	if ! test -f configs/qemu.x86_64.defconfig; then
+		echo "No configs/qemu.x86_64.defconfig found." 1>&2
+		exit 1
+	fi
+
+	UK_DEFCONFIG="$PWD/configs/qemu.x86_64.defconfig" make defconfig >/dev/null
+	make olddefconfig >/dev/null
+}
+
 intercept_example_require_config()
 {
 	if [ ! -f .config ]; then

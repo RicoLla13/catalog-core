@@ -3,6 +3,13 @@
 `intercept-bench-micro` is the first benchmark app for the client-side
 intercept project.
 
+It covers the syscall-level microbenchmark tier only. The broader workflow
+and application benchmark plan lives in
+`docs/gen-docs/unikraft-intercept/BENCHMARKING_PLAN.md`.
+
+This remains the isolated syscall-latency benchmark. Use it alongside, not
+instead of, the tree workflow and SQLite application benchmarks.
+
 It runs the same syscall-shaped workload in three modes:
 
 1. host OS native

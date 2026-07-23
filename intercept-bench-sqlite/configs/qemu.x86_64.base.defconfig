@@ -1,7 +1,7 @@
 CONFIG_PLAT_KVM=y
 # CONFIG_LIBUKMMAP is not set
 CONFIG_ARCH_X86_64=y
-CONFIG_UK_NAME="intercept-bench-micro"
+CONFIG_UK_NAME="intercept-bench-sqlite"
 CONFIG_LIBMUSL=y
 # CONFIG_LWIP_NETIF_STATUS_PRINT is not set
 # CONFIG_LWIP_NETIF_EXT_STATUS_CALLBACK is not set

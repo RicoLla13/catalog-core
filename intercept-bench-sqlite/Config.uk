@@ -1,0 +1,9 @@
+config APPINTERCEPTBENCHSQLITE
+	bool "Configure intercept-bench-sqlite"
+	default y
+
+	select LIBINTERCEPT
+	select LIBLWIP
+	select LIBMUSL
+	select LIBSQLITE
+	select LIBUKNETDEV_EINFO_LIBPARAM

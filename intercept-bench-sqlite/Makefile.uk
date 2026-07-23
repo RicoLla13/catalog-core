@@ -1,0 +1,3 @@
+$(eval $(call addlib,appinterceptbenchsqlite))
+
+APPINTERCEPTBENCHSQLITE_SRCS-y += $(APPINTERCEPTBENCHSQLITE_BASE)/main.c
