@@ -30,11 +30,11 @@ and removes:
    ./build/syscall_server
    ```
 
-2. Configure the guest once:
+2. Configure the guest:
 
    ```sh
+   ./setup.sh clean
    ./setup.sh
-   make menuconfig
    ```
 
 3. Launch the sample:
@@ -42,6 +42,10 @@ and removes:
    ```sh
    ./run.sh
    ```
+
+`setup.sh` applies the checked-in x86_64 defconfig. It enables musl, intercept
+on port `9999`, mandatory boot-time connection, and disables LWIP status
+printing so early network initialization does not affect `stdout`.
 
 ## Expected Checks
 

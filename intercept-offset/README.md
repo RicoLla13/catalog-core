@@ -29,11 +29,11 @@ The guest creates `intercept-offset.txt` during the run.
    ./build/syscall_server
    ```
 
-2. Configure the guest once:
+2. Configure the guest:
 
    ```sh
+   ./setup.sh clean
    ./setup.sh
-   make menuconfig
    ```
 
 3. Launch the sample:
