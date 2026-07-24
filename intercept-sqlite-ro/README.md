@@ -29,7 +29,7 @@ by copying the existing catalog database from:
 1. Start the host syscall server:
 
    ```sh
-   cd repos/syscall-server
+   cd ../repos/syscall-server
    make create_folders server client test_suite
    ./build/syscall_server
    ```

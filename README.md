@@ -1,6 +1,9 @@
-# Catalog Core
+# Catalog Core — Unikraft syscall interception project
 
-This is a catalog of Unikraft applications that are set up, configured, built and run using first principles tools: Make, GCC, Clang, Kconfig, QEMU, Firecracker, Xen.
+This catalog contains the original Unikraft examples plus the syscall
+interception project developed in this fork. The project adds a Unikraft-side
+intercept library, a host syscall-server bridge, focused filesystem examples,
+and benchmark harnesses using Make, Kconfig, and x86_64 QEMU.
 Each directory belongs to a given application and it typically consists of source code, `Makefile`, `Makefile.uk`, filesystem and a `README.md` file with instructions.
 
 This catalog is targeted towards Unikraft core developers (i.e. developers of [`unikraft` core repository](https://github.com/unikraft/unikraft) or [library repositories](https://github.com/search?q=topic%3Alibrary+org%3Aunikraft&type=Repositories)), maintainers, testers and those who want to learn about the [internals of Unikraft](https://unikraft.org/docs/internals).
@@ -15,7 +18,20 @@ cd catalog-core/
 cd <application-directory>
 ```
 
-Inside the directory, follow the instructions in the application `README.md`.
+For the interception project, start the host server from `repos/syscall-server`
+and follow the README in one of the `intercept-*` directories. The library is
+implemented in `repos/unikraft/lib/intercept/`; its design and status notes are
+under `docs/gen-docs/unikraft-intercept/`.
+
+Useful starting points are:
+
+- `intercept-simple/` for the smallest RPC smoke test
+- `intercept-tree/` for application-like filesystem traversal
+- `intercept-sqlite-ro/` for the read-only SQLite probe
+- `intercept-bench-micro/`, `intercept-bench-tree/`, and
+  `intercept-bench-sqlite/` for measurements
+
+Inside any other catalog directory, follow that application’s `README.md`.
 
 Before and while you are using this catalog, read about the [internals of Unikraft](https://unikraft.org/docs/internals).
 
