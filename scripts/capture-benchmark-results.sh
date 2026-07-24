@@ -46,7 +46,7 @@ extract()
 	awk -v run="$run" -v mode="$mode" '
 	BEGIN { print "run,mode,name,iterations,total_ns,avg_ns,p50_ns,p95_ns,min_ns,max_ns,ops_per_sec,mib_per_sec" }
 	$1 == "BENCH" { count++; delete kv; for (i = 2; i <= NF; i++) { split($i, p, "="); kv[p[1]] = p[2] } printf "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n", run,mode,kv["name"],kv["iterations"],kv["total_ns"],kv["avg_ns"],kv["p50_ns"],kv["p95_ns"],kv["min_ns"],kv["max_ns"],kv["ops_per_sec"],kv["mib_per_sec"] }
-	END { if (count != 1) exit 1 }
+	END { if (count == 0) exit 1 }
 	' "$log"
 }
 
